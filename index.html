@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portofolio Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+</head>
+<body>
+    <img src="assets/logo2.png" alt="Logo" class="logo-img">
+    <h1 class="title">PORTOFOLIO GENERATOR</h1>
+    <h2 class="subtitle">Version 0.1 - 25 Juli 2025</h2>
+
+    <p class="description">
+        Website ini ditujukan untuk memudahkan dosen Departemen Teknik Geodesi FT UGM dalam pembuatan Portofolio Mata Kuliah
+    </p>
+    <p>
+        Link template portofolio: <a href="https://docs.google.com/document/d/1rvIjbbI7nb6IN2gVJHeI0dRuxb714xqN/edit?usp=sharing&ouid=115539750102645325103&rtpof=true&sd=true">Template Portofolio</a><br>
+        Link RPKPS setiap mata kuliah: <a href="https://docs.google.com/spreadsheets/d/1k0fT4Xq_DxciS0LIzynbmjU6bwp4LM0V_L5bD917yBo/edit?usp=sharing">Basisdata RPKPS</a><br>
+        Link Peta Kurikulum: <a href="https://docs.google.com/spreadsheets/d/1bGLwJS37uzSJFAzyYarP0eGzbNK8EkoO/edit?usp=sharing&ouid=115539750102645325103&rtpof=true&sd=true">Peta Kurikulum</a>
+    </p>
+
+    <div class="input-group">
+        <label>Berapa jumlah CPMK?</label>
+        <input type="number" id="jumlahCPMK" min="1">
+    </div>
+
+    <div class="input-group">
+        <label>CPL MK:</label>
+        <div id="cplButtons" class="cpl-buttons">
+        <!-- Buttons A to K -->
+        </div>
+    </div>
+
+    <div class="input-group">
+        <div class="assessment-header-controls">
+            <label><strong>Rencana Asesmen:</strong></label>
+            <button onclick="addAssessmentRow()">+</button>
+            <button onclick="removeAssessmentRow()">-</button>
+        </div>
+
+        <div id="assessmentTable">
+            <div id="assessmentHeader">
+            <div>CPMK</div>
+            <div>Tipe</div>
+            <div>Deskripsi</div>
+            <div>Persentase</div>
+            <div>Nilai Maksimal</div>
+            <div>CPL</div>
+            <div>PI</div>
+            </div>
+
+            <div id="assessmentRows"></div>
+            <p id="persentaseWarning"></p>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button class="main-button" onclick="saveTemplate()">Save as Template</button>
+        <label for="templateUpload" class="main-button">Load Template</label>
+        <input type="file" id="templateUpload" accept=".csv" style="display:none" onchange="loadTemplate(event)">
+    </div>
+
+    <div class="input-group">
+        <label>Berapa jumlah mahasiswa?</label>
+        <input type="number" id="jumlahMahasiswa" min="1">
+    </div>
+
+    <div class="button-group">
+        <button class="main-button" onclick="generateCSVTemplate()">Generate CSV Template</button>
+        <label for="csvUpload" class="main-button">Upload Nilai</label>
+        <input type="file" id="csvUpload" accept=".csv" style="display: none;" />
+        <button class="main-button" onclick="generateCPMKPortfolio()">Generate Portofolio</button>
+    </div>
+    <div id="uploadStatus" style="margin-top: 10px;"></div>
+    
+    <div id="cpmkPerformance"></div>
+    <canvas id="cpmkChart" width="600" height="300"></canvas>
+    <div id="cplPerformance"></div>
+    <canvas id="cplChart" width="600" height="300"></canvas>
+    <div id="piPerformance"></div>
+    <canvas id="piChart" width="600" height="300"></canvas>
+
+    <script src="main.js"></script>
+</body>
+</html>
