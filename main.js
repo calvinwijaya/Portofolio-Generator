@@ -1,5 +1,19 @@
 // main.js
 
+// Sidebar panel
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("sidebarToggle");
+    sidebar.classList.toggle("collapsed");
+    toggleBtn.innerHTML = sidebar.classList.contains("collapsed") ? "&#x25C0;" : "&#x25B6;";
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+    document.getElementById(tabId + "Tab").classList.add("active");
+}
+
+// Search Mata Kuliah
 let mkList = [];
 
 // Load mata kuliah list from list_mk.txt
@@ -539,7 +553,8 @@ function generateCPMKPortfolio() {
     });
 
     const cplResultRows = [];
-    const usedCPLChartData = {};
+    window.usedCPLChartData = {};
+    const usedCPLChartData = window.usedCPLChartData;
 
     Object.entries(cplMap).forEach(([cpl, items]) => {
       const studentSums = Array(scores.length).fill(0);
@@ -679,7 +694,8 @@ function generateCPMKPortfolio() {
     });
 
     const piResultRows = [];
-    const usedPIChartData = {};  // PI: avg mapping
+    window.usedPIChartData = {};
+    const usedPIChartData = window.usedPIChartData;
 
     Object.entries(piMap).forEach(([pi, items]) => {
       const studentSums = Array(scores.length).fill(0);
@@ -788,4 +804,49 @@ function generateCPMKPortfolio() {
     });
   };
   reader.readAsText(file);
+}
+
+// Send data to Google Sheets
+async function sendToSheet() {
+  // Get selected MK name
+  const mkName = document.getElementById('searchMK').value.trim();
+  if (!mkName) {
+    alert("Silakan pilih Nama Mata Kuliah terlebih dahulu.");
+    return;
+  }
+
+  // Ensure generateCPMKPortfolio has been run
+  if (!window.usedCPLChartData || !window.usedPIChartData) {
+    alert("Silakan generate portofolio CPMK terlebih dahulu.");
+    return;
+  }
+
+  // Merge CPL + PI data
+  const payload = {
+    "Nama Mata Kuliah": mkName,
+    ...window.usedCPLChartData,
+    ...window.usedPIChartData
+  };
+
+  console.log("Sending data to sheet:", payload);
+
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbz5NC_mC3FVwGVde4HK3LUKxzuQNAOrDUVW7fOhxOAv18AZRuxVyNJOjCQR6ax4hcmVRg/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if (result.result === 'success') {
+      alert("Data berhasil dikirim ke spreadsheet.");
+    } else {
+      alert("Gagal mengirim data.");
+    }
+  } catch (error) {
+    console.error("Error sending to sheet:", error);
+    alert("Terjadi kesalahan saat mengirim data.");
+  }
 }
