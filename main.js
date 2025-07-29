@@ -861,20 +861,21 @@ async function sendToSheet() {
 
 // Load rekap data from Google Sheets
 async function loadRekapData() {
-  try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbzZUpzu3CllhapzQ9TSekeaZkP1G3zBg4xKX4H9-aVdkhCHzcO7nccctM404zaWXZEG/exec');
-    const data = await response.json();
-    if (!Array.isArray(data) || data.length < 2) throw new Error("Data kosong atau salah format");
+  document.getElementById("loadingOverlay").style.display = "flex";
 
-    const headers = data[0];
-    const rows = data.slice(1);
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbzAKL2_QaqkkDiFx27eEUQWQgrZ6FCY6y7zbeLUkUpWON3NyrcrP7G06ESeaO4l_okl/exec');
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error("Data kosong atau salah format");
+
+    const rows = data;
 
     const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
     const piKeys = [];
     for (let c of 'abcdefghijk') {
       for (let i = 1; i <= 4; i++) {
         const key = `${c}${i}`;
-        if (headers.includes(key)) piKeys.push(key);
+        piKeys.push(key);
       }
     }
 
@@ -885,14 +886,14 @@ async function loadRekapData() {
     piKeys.forEach(k => { piSums[k] = 0; piCounts[k] = 0; });
 
     rows.forEach(row => {
-      headers.forEach((h, i) => {
-        const val = parseFloat(row[i]);
-        if (!isNaN(val)) {
+      Object.entries(row).forEach(([h, val]) => {
+        const num = parseFloat(val);
+        if (!isNaN(num)) {
           if (cplKeys.includes(h)) {
-            cplSums[h] += val;
+            cplSums[h] += num;
             cplCounts[h]++;
           } else if (piKeys.includes(h)) {
-            piSums[h] += val;
+            piSums[h] += num;
             piCounts[h]++;
           }
         }
@@ -910,12 +911,13 @@ async function loadRekapData() {
     }));
 
     drawCPLRadarChart(avgCPL);
-    drawCPLTable(avgCPL);
     drawPIBarChart(avgPI);
 
   } catch (err) {
     console.error("Gagal memuat rekap:", err);
     alert("Gagal memuat data rekap. Silakan coba lagi.");
+  } finally {
+    document.getElementById("loadingOverlay").style.display = "none";
   }
 }
 
@@ -926,7 +928,9 @@ function drawCPLRadarChart(avgData) {
   const thresholdSO = Array(avgData.length).fill(70);
 
   const ctx = document.getElementById('soRadarChart').getContext('2d');
-  if (window.soRadarChart) window.soRadarChart.destroy();
+  if (window.soRadarChart instanceof Chart) {
+    window.soRadarChart.destroy();
+  }
 
   window.soRadarChart = new Chart(ctx, {
     type: 'radar',
@@ -966,23 +970,15 @@ function drawCPLRadarChart(avgData) {
   });
 }
 
-function drawCPLTable(data) {
-  const tableHTML = `
-    <h3>Tabel Rata-rata CPL</h3>
-    <table border="1" cellpadding="4" cellspacing="0">
-      <tr><th>CPL</th><th>Rata-rata</th></tr>
-      ${data.map(d => `<tr><td>${d.label}</td><td>${d.value.toFixed(2)}</td></tr>`).join('')}
-    </table>`;
-  document.getElementById('cplTableContainer').innerHTML = tableHTML;
-}
-
 function drawPIBarChart(avgData) {
   const piLabels = avgData.map(d => d.label);
   const piValues = avgData.map(d => d.value.toFixed(2));
   const thresholdPI = Array(piLabels.length).fill(70);
 
   const ctx = document.getElementById('rekapPiChart').getContext('2d');
-  if (window.rekapPiChart) window.rekapPiChart.destroy();
+  if (window.rekapPiChart instanceof Chart) {
+    window.rekapPiChart.destroy();
+  }
 
   window.rekapPiChart = new Chart(ctx, {
     type: 'bar',
@@ -999,7 +995,7 @@ function drawPIBarChart(avgData) {
           data: thresholdPI,
           borderColor: 'rgba(255, 193, 7, 1)',
           borderDash: [5, 5],
-          fill: false,
+          fill: false,  
           type: 'line',
           pointRadius: 0
         }
