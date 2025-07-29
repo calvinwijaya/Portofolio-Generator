@@ -862,7 +862,7 @@ async function sendToSheet() {
 // Load rekap data from Google Sheets
 async function loadRekapData() {
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbxjmuf6H8bvWb0b346KhTl2jejaRAQOEgAStQpZ_1Y1_e1Q-AQlFZYFeqgrhGp5xF4f/exec');
+    const response = await fetch('https://script.google.com/macros/s/AKfycbzZUpzu3CllhapzQ9TSekeaZkP1G3zBg4xKX4H9-aVdkhCHzcO7nccctM404zaWXZEG/exec');
     const data = await response.json();
     if (!Array.isArray(data) || data.length < 2) throw new Error("Data kosong atau salah format");
 
