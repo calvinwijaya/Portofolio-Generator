@@ -871,13 +871,7 @@ async function loadRekapData() {
     const rows = data;
 
     const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
-    const piKeys = [];
-    for (let c of 'abcdefghijk') {
-      for (let i = 1; i <= 4; i++) {
-        const key = `${c}${i}`;
-        piKeys.push(key);
-      }
-    }
+    const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5', 'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5', 'h1', 'h2', 'i1', 'i2', 'j1', 'j2','k1', 'k2', 'k3', 'k4'];
 
     const cplSums = {}, cplCounts = {};
     cplKeys.forEach(k => { cplSums[k] = 0; cplCounts[k] = 0; });
