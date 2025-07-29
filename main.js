@@ -11,6 +11,10 @@ function toggleSidebar() {
 function switchTab(tabId) {
     document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
     document.getElementById(tabId + "Tab").classList.add("active");
+    
+    if (tabId === 'rekap') {
+      loadRekapData(); // auto-refresh when Rekap tab opened
+  }
 }
 
 // Search Mata Kuliah
@@ -808,45 +812,212 @@ function generateCPMKPortfolio() {
 
 // Send data to Google Sheets
 async function sendToSheet() {
-  // Get selected MK name
   const mkName = document.getElementById('searchMK').value.trim();
   if (!mkName) {
     alert("Silakan pilih Nama Mata Kuliah terlebih dahulu.");
     return;
   }
 
-  // Ensure generateCPMKPortfolio has been run
   if (!window.usedCPLChartData || !window.usedPIChartData) {
     alert("Silakan generate portofolio CPMK terlebih dahulu.");
     return;
   }
 
-  // Merge CPL + PI data
   const payload = {
     "Nama Mata Kuliah": mkName,
     ...window.usedCPLChartData,
     ...window.usedPIChartData
   };
 
-  console.log("Sending data to sheet:", payload);
+  const formData = new FormData();
+  formData.append("data", JSON.stringify(payload));
+
+  document.getElementById("loadingOverlay").style.display = "flex";
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbz5NC_mC3FVwGVde4HK3LUKxzuQNAOrDUVW7fOhxOAv18AZRuxVyNJOjCQR6ax4hcmVRg/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+    const response = await fetch(
+      "https://script.google.com/macros/s/AKfycbwuHgayBDBz3NJmsh31duodYksNJSP0F_wWaKwMfyIVDe3O_Kb6AVTHoF4ikSly1WBOZQ/exec",
+      {
+        method: "POST",
+        body: formData
+        // NO custom headers!
+      }
+    );
 
     const result = await response.json();
-    if (result.result === 'success') {
-      alert("Data berhasil dikirim ke spreadsheet.");
+    if (result.result === "success") {
+      alert("Data berhasil dikirim ke spreadsheet!");
     } else {
-      alert("Gagal mengirim data.");
+      alert("Gagal mengirim data: " + result.message);
     }
-  } catch (error) {
-    console.error("Error sending to sheet:", error);
+  } catch (err) {
+    console.error("Error sending to sheet:", err);
     alert("Terjadi kesalahan saat mengirim data.");
+  } finally {
+    // Hide loading
+    document.getElementById("loadingOverlay").style.display = "none";
   }
+}
+
+// Load rekap data from Google Sheets
+async function loadRekapData() {
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbxjmuf6H8bvWb0b346KhTl2jejaRAQOEgAStQpZ_1Y1_e1Q-AQlFZYFeqgrhGp5xF4f/exec');
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length < 2) throw new Error("Data kosong atau salah format");
+
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
+    const piKeys = [];
+    for (let c of 'abcdefghijk') {
+      for (let i = 1; i <= 4; i++) {
+        const key = `${c}${i}`;
+        if (headers.includes(key)) piKeys.push(key);
+      }
+    }
+
+    const cplSums = {}, cplCounts = {};
+    cplKeys.forEach(k => { cplSums[k] = 0; cplCounts[k] = 0; });
+
+    const piSums = {}, piCounts = {};
+    piKeys.forEach(k => { piSums[k] = 0; piCounts[k] = 0; });
+
+    rows.forEach(row => {
+      headers.forEach((h, i) => {
+        const val = parseFloat(row[i]);
+        if (!isNaN(val)) {
+          if (cplKeys.includes(h)) {
+            cplSums[h] += val;
+            cplCounts[h]++;
+          } else if (piKeys.includes(h)) {
+            piSums[h] += val;
+            piCounts[h]++;
+          }
+        }
+      });
+    });
+
+    const avgCPL = cplKeys.map(k => ({
+      label: k.toUpperCase(),
+      value: cplCounts[k] ? (cplSums[k] / cplCounts[k]) : 0
+    }));
+
+    const avgPI = piKeys.map(k => ({
+      label: k.toLowerCase(),
+      value: piCounts[k] ? (piSums[k] / piCounts[k]) : 0
+    }));
+
+    drawCPLRadarChart(avgCPL);
+    drawCPLTable(avgCPL);
+    drawPIBarChart(avgPI);
+
+  } catch (err) {
+    console.error("Gagal memuat rekap:", err);
+    alert("Gagal memuat data rekap. Silakan coba lagi.");
+  }
+}
+
+// Draw rekap data
+function drawCPLRadarChart(avgData) {
+  const soLabels = avgData.map(d => `CPL ${d.label}`);
+  const soValues = avgData.map(d => d.value.toFixed(2));
+  const thresholdSO = Array(avgData.length).fill(70);
+
+  const ctx = document.getElementById('soRadarChart').getContext('2d');
+  if (window.soRadarChart) window.soRadarChart.destroy();
+
+  window.soRadarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: soLabels,
+      datasets: [
+        {
+          label: 'Nilai CPL',
+          data: soValues,
+          backgroundColor: 'rgba(21, 101, 192, 0.2)',
+          borderColor: '#1565c0',
+          pointBackgroundColor: '#1565c0',
+          fill: true
+        },
+        {
+          label: 'Standar (70)',
+          data: thresholdSO,
+          borderColor: 'rgba(255, 193, 7, 1)',
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 10 },
+          grid: { circular: true },
+          pointLabels: { font: { size: 12 } }
+        }
+      }
+    }
+  });
+}
+
+function drawCPLTable(data) {
+  const tableHTML = `
+    <h3>Tabel Rata-rata CPL</h3>
+    <table border="1" cellpadding="4" cellspacing="0">
+      <tr><th>CPL</th><th>Rata-rata</th></tr>
+      ${data.map(d => `<tr><td>${d.label}</td><td>${d.value.toFixed(2)}</td></tr>`).join('')}
+    </table>`;
+  document.getElementById('cplTableContainer').innerHTML = tableHTML;
+}
+
+function drawPIBarChart(avgData) {
+  const piLabels = avgData.map(d => d.label);
+  const piValues = avgData.map(d => d.value.toFixed(2));
+  const thresholdPI = Array(piLabels.length).fill(70);
+
+  const ctx = document.getElementById('rekapPiChart').getContext('2d');
+  if (window.rekapPiChart) window.rekapPiChart.destroy();
+
+  window.rekapPiChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: piLabels,
+      datasets: [
+        {
+          label: 'Nilai PI',
+          data: piValues,
+          backgroundColor: '#2e7d32'
+        },
+        {
+          label: 'Standar (70)',
+          data: thresholdPI,
+          borderColor: 'rgba(255, 193, 7, 1)',
+          borderDash: [5, 5],
+          fill: false,
+          type: 'line',
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 10 },
+          grid: { drawOnChartArea: true }
+        },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
 }

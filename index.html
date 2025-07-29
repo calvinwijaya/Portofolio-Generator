@@ -115,9 +115,17 @@
         </div>
 
         <div id="rekapTab" class="tab-content">
-            <h2>Rekap</h2>
-            <p>Konten rekap akan ditambahkan di sini.</p>
+            <h2>Rekapitulasi Capaian CPL</h2>
+            <canvas id="soRadarChart" width="400" height="400"></canvas>
+            <div id="cplTableContainer"></div>
+
+            <h2>Rekapitulasi Capaian PI</h2>
+            <canvas id="rekapPiChart" width="800" height="400"></canvas>
         </div>
+    </div>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
     </div>
 
     <script src="main.js"></script>
