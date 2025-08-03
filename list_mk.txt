@@ -1,100 +1,18 @@
-Pendidikan Pancasila
-Kalkulus
-Pengantar Ilmu Kebumian
-Aljabar Linear
-Fisika Dasar
-Statistika Dasar
-Matematika Diskrit
-Hukum Agraria
-Survei Terestris I
-Praktikum Survei Terestris I
 Sistem Koordinat
-Geometri Analitik
-Konsep Keteknikan untuk Peradaban
 Hitung Perataan
-Dasar-dasar Geofisika dan Astronomi
-Sistem Basisdata
 Praktikum Sistem Basisdata
-Pemrograman Komputer
-Praktikum Pemrograman Komputer
 Survei Terestris II
 Praktikum Survei Terestris II
-Pendidikan Kewarganegaraan
-Geometri Diferensial
-Oseanografi Fisis
-Sistem Referensi Geodesi
-Fotogrametri Dasar
-Praktikum Fotogrametri Dasar
-Sistem Informasi Geografis
-Praktikum Sistem Informasi Geografis
-Analisis Statistika
-Survei Terestris III
-Praktikum Survei Terestris III
-Geodesi Satelit
 Proyeksi Peta
 Kartografi
 Praktikum Kartografi
-Sistem Fotogrametri Digital
-Praktikum Sistem Fotogrametri Digital
-Grafika Komputer dan Visualisasi
 Praktikum Grafika Komputer dan Visualisasi
-Survei Rekayasa
-Praktikum Survei Rekayasa
-Penginderaan Jauh
 Praktikum Penginderaan Jauh
-Geodesi Fisis
-Model Terain Digital
-Administrasi Pertanahan
-Pemrograman Spasial
-Survei GNSS
-Praktikum Survei GNSS
-Survei Hidrografi I
-Praktikum Survei Hidrografi I
 Survei Kadastral
 Praktikum Survei Kadastral
-Kemah Kerja
 Metodologi Penelitian
-Perancangan Sistem Informasi Pertanahan
-Penetapan dan Penegasan Batas Wilayah
 Jaring Kontrol Geodesi
 Survei Hidrografi II
-Analisis Citra Penginderaan Jauh
-Praktikum Analisis Citra Penginderaan Jauh
-Analisis Geospasial
 Praktikum Analisis Geospasial
-Pendidikan Agama
-Kerja Praktik
-Proyek Rekayasa Geodesi-Geomatika
-Kuliah Kerja Nyata
-Skripsi
-Dasar Geosensor
-Hitung Perataan Terapan
-Mitigasi dan Manajemen Bencana
-Penginderaan Jauh Terapan
-Aplikasi Fotogrametri Jarak Dekat
-Survei Pertambangan
-Praktikum Survei Pertambangan
-Sistem Kadastral
-Basis Data Spasial
-SIG Terapan
-Praktikum SIG Terapan
-Hukum Laut
-SIG Berbasis Web
-Praktikum SIG Berbasis Web
-Manajemen dan Kepemimpinan
-Teknologi Geomatika
-Industri Geospasial
-Infrastruktur Informasi Geospasial
-Struktur Data Spasial
-Survei Rekayasa Laut
-Penginderaan Jauh Sensor Aktif
-Survei Geodinamika
-Pengelolaan Wilayah Pesisir
-Survei Rute
-Praktikum Survei Rute
 GNSS Terapan
 Praktikum GNSS Terapan
-Manajemen dan Kewirausahaan
-Penilaian Tanah dan Properti
-Penataan Agraria dan Tata Ruang
-Survei Deformasi

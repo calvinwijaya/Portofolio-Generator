@@ -54,69 +54,48 @@ function filterMK() {
   suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
 }
 
-// Generate portfolio template
-async function downloadPortofolioTemplate() {
-  const mkName = document.getElementById('searchMK').value.trim();
-  if (!mkName) {
-    alert("Silakan pilih Mata Kuliah terlebih dahulu.");
-    return;
-  }
+// // Generate portfolio template
+// async function downloadPortofolioTemplate() {
+//   const mkName = document.getElementById('searchMK').value.trim();
+//   if (!mkName) {
+//     alert("Silakan pilih Mata Kuliah terlebih dahulu.");
+//     return;
+//   }
 
-  // 1. Download the XLSX file
-  const xlsxUrl = 'https://raw.githubusercontent.com/calvinwijaya/Portofolio-Generator/main/Template%20MK.xlsx';
-  const docxUrl = 'https://raw.githubusercontent.com/calvinwijaya/Portofolio-Generator/main/Template%20Portofolio.docx';
+//   const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaZTwa9BXIuayN_5G2IVfoIbSWSJsac5zJ4ZH9FtZ4_GH3MAtlYcy7mqbT8RXm1JWbXA/exec';
 
+//   try {
+//     document.getElementById("loadingOverlay").style.display = "flex";
+//     const response = await fetch(`${scriptUrl}?nama=${encodeURIComponent(mkName)}`);
+//     const result = await response.json();
 
-  const [xlsxBlob, docxBlob] = await Promise.all([
-    fetch(xlsxUrl).then(r => r.blob()),
-    fetch(docxUrl).then(r => r.blob())
-  ]);
+//     if (result.status === "NOT_FOUND") {
+//       alert("Template Portofolio belum tersedia. RPKPS yang digunakan masih format lama. Silahkan ganti pada format baru dan sampaikan ke Mas Calvin/ Pak Cecep untuk mengupdate di database. Terima kasih.");
+//       return;
+//     }
 
-  // 2. Read XLSX to find the row for selected MK
-  const data = await xlsxBlob.arrayBuffer();
-  const workbook = XLSX.read(data, { type: "array" });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+//     const byteCharacters = atob(result.base64);
+//     const byteNumbers = new Array(byteCharacters.length);
+//     for (let i = 0; i < byteCharacters.length; i++) {
+//       byteNumbers[i] = byteCharacters.charCodeAt(i);
+//     }
+//     const byteArray = new Uint8Array(byteNumbers);
+//     const blob = new Blob([byteArray], {
+//       type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+//     });
 
-  const mkData = json.find(row => row["Nama Mata Kuliah"] === mkName);
-  if (!mkData) {
-    alert("Data untuk mata kuliah tidak ditemukan di Excel.");
-    return;
-  }
+//     const link = document.createElement("a");
+//     link.href = URL.createObjectURL(blob);
+//     link.download = result.name || `Portofolio ${mkName}.docx`;
+//     link.click();
 
-  // 3. Replace placeholders in DOCX
-  const zip = new PizZip(await docxBlob.arrayBuffer());
-  const doc = new window.docxtemplater().loadZip(zip);
-
-  // Format: {Nama Mata Kuliah}, {kode/sks/sifat}, etc.
-  const replacements = {};
-  Object.keys(mkData).forEach(key => {
-    replacements[key.trim()] = mkData[key];
-  });
-
-  doc.setOptions({ paragraphLoop: true, linebreaks: true });
-  doc.setData(replacements);
-
-  try {
-    doc.render();
-  } catch (err) {
-    console.error("DOCX render error:", err);
-    alert("Terjadi kesalahan saat memproses file Word.");
-    return;
-  }
-
-  const out = doc.getZip().generate({
-    type: "blob",
-    mimeType:
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  });
-
-  const fileName = `Portofolio ${mkName.replace(/[\\/:*?"<>|]/g, "")}.docx`;
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(out);
-  link.download = fileName;
-  link.click();
-}
+//   } catch (err) {
+//     console.error("Download error:", err);
+//     alert("Gagal mengunduh template portofolio. Silakan coba lagi.");
+//   } finally {
+//     document.getElementById("loadingOverlay").style.display = "none";
+//   }
+// }
 
 // Generate CPL buttons A to K
 const cplContainer = document.getElementById("cplButtons");
@@ -472,6 +451,8 @@ function generateCPMKPortfolio() {
       });
     });
 
+    window.cpmkData = resultRows;
+
     // Step 3: Render Table
     const tableHtml = `
       <table border="1" cellpadding="4" cellspacing="0">
@@ -593,6 +574,8 @@ function generateCPMKPortfolio() {
       usedCPLChartData[cpl] = avg.toFixed(2);
     });
 
+    window.cplData = cplResultRows;
+
     const cplTableHtml = `
       <h3>Capaian CPL</h3>
       <table border="1" cellpadding="4" cellspacing="0">
@@ -605,6 +588,7 @@ function generateCPMKPortfolio() {
       </table>
     `;
     document.getElementById('cplPerformance').innerHTML = cplTableHtml;
+    window.cplTableHtml = cplTableHtml;
 
     const allCPLs = ['a','b','c','d','e','f','g','h','i','j','k'];
     const cplChartData = allCPLs.map(cpl => ({
@@ -733,6 +717,8 @@ function generateCPMKPortfolio() {
       usedPIChartData[pi] = avg.toFixed(2);
     });
 
+    window.piData = piResultRows;
+
     const piTableHtml = `
       <h3>Capaian PI</h3>
       <table border="1" cellpadding="4" cellspacing="0">
@@ -745,6 +731,7 @@ function generateCPMKPortfolio() {
       </table>
     `;
     document.getElementById('piPerformance').innerHTML = piTableHtml;
+    window.piTableHtml = piTableHtml;
     
     const piChartData = allPIs.map(pi => ({
       label: pi,
@@ -1010,4 +997,139 @@ function drawPIBarChart(avgData) {
       }
     }
   });
+}
+
+// Download and process the portofolio template
+async function generateAndDownloadFullPortfolio() {
+  const mkName = document.getElementById('searchMK').value.trim();
+  const kelas = document.getElementById("kelas").value;
+  const evaluasiText = document.getElementById("evaluasi").value.trim();
+  const rencanaText = document.getElementById("rencana").value.trim();
+  if (!mkName) {
+    alert("Silakan pilih Mata Kuliah terlebih dahulu.");
+    return;
+  }
+
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaZTwa9BXIuayN_5G2IVfoIbSWSJsac5zJ4ZH9FtZ4_GH3MAtlYcy7mqbT8RXm1JWbXA/exec';
+
+  try {
+    document.getElementById("loadingOverlay").style.display = "flex";
+
+    const response = await fetch(`${scriptUrl}?nama=${encodeURIComponent(mkName)}`);
+    const result = await response.json();
+
+    if (result.status === "NOT_FOUND") {
+      alert("Template Portofolio belum tersedia. RPKPS yang digunakan masih format lama. Silahkan ganti pada format baru dan sampaikan ke Mas Calvin/ Pak Cecep untuk mengupdate di database. Terima kasih.");
+      return;
+    }
+
+    // Decode base64 to binary blob
+    const byteCharacters = atob(result.base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    });
+
+    // Load DOCX template
+    const zip = new PizZip(await blob.arrayBuffer());
+    const doc = new window.docxtemplater().loadZip(zip);
+    doc.setOptions({
+      paragraphLoop: true,
+      linebreaks: true,
+      parser: (tag) => ({
+        get: (scope) => {
+          const val = scope[tag];
+          if (val && typeof val === 'object') {
+            if (val.raw) return {
+              value: val.raw,
+              toString: () => val.raw, // fallback
+            };
+            if (val.image) return val.image;
+          }
+          return val;
+        }
+      })
+    });
+
+    // Prepare data to inject into placeholders
+    const tableRows = [];
+    const headers = ["CPMK", "Tipe", "Deskripsi", "Persentase", "Nilai Maksimal", "CPL", "PI"];
+
+    document.querySelectorAll("#assessmentRows .assessment-row").forEach(row => {
+      const inputs = row.querySelectorAll("input, select");
+      const values = Array.from(inputs).map(i => i.value.trim());
+      const rowObj = {};
+      headers.forEach((key, idx) => {
+        rowObj[key.replace(/\s+/g, "")] = values[idx]; // Remove spaces in keys
+      });
+      tableRows.push(rowObj);
+    });
+
+    // Generate HTML table string
+    let plainTable = "CPMK\tTipe\tDeskripsi\tPersentase\tNilai Maksimal\tCPL\tPI\n";
+    let plainCPMK = "CPMK\tPersentase\tStandar\tPerformance\tEvaluasi\n";
+    let plainCPL = "CPL\tPerformance\n";
+    let plainPI = "PI\tPerformance\n";
+
+    document.querySelectorAll("#assessmentRows .assessment-row").forEach(row => {
+      const inputs = row.querySelectorAll("input, select");
+      const values = Array.from(inputs).map(i => i.value.trim());
+      plainTable += values.join("\t") + "\n";
+    });
+
+    (window.cpmkData || []).forEach(row => {
+      plainCPMK += `${row.cpmk}\t${row.persentase}\t${row.standar}\t${row.capaian}\t${row.evaluasi}\n`;
+    });
+
+    (window.cplData || []).forEach(row => {
+      plainCPL += `${row.cpl}\t${row.capaian}\n`;
+    });
+
+    (window.piData || []).forEach(row => {
+      plainPI += `${row.pi}\t${row.capaian}\n`;
+    });
+
+    const replacements = {
+      Kelas: kelas,
+      Evaluasi: evaluasiText,
+      Rencana: rencanaText,
+      Rencana_Asesmen: plainTable,
+      Tabel_CPMK: plainCPMK,
+      Tabel_CPL: plainCPL,
+      Tabel_PI: plainPI,
+    };
+
+    doc.setData(replacements);
+
+    try {
+      doc.render();
+    } catch (error) {
+      console.error("Render error:", error);
+      alert("Gagal memproses dokumen. Periksa placeholder dalam file Word.");
+      return;
+    }
+
+    const out = doc.getZip().generate({
+      type: "blob",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    });
+
+    const originalName = result.name.replace(/\.[^/.]+$/, "");
+    const finalName = `Portofolio ${originalName}.docx`;
+    
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(out);
+    link.download = finalName;
+    link.click();
+
+  } catch (err) {
+    console.error("Download error:", err);
+    alert("Gagal mengunduh atau memproses template portofolio.");
+  } finally {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
 }
