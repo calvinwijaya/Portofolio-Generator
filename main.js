@@ -800,6 +800,7 @@ function generateCPMKPortfolio() {
 // Send data to Google Sheets
 async function sendToSheet() {
   const mkName = document.getElementById('searchMK').value.trim();
+  const kelas = document.getElementById('kelas').value.trim();
   if (!mkName) {
     alert("Silakan pilih Nama Mata Kuliah terlebih dahulu.");
     return;
@@ -812,6 +813,7 @@ async function sendToSheet() {
 
   const payload = {
     "Nama Mata Kuliah": mkName,
+    "Kelas": kelas,
     ...window.usedCPLChartData,
     ...window.usedPIChartData
   };
