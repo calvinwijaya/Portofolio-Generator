@@ -16,6 +16,7 @@
         <div id="sidebarToggle" onclick="toggleSidebar()">&#x25B6;</div>
         <div class="tab-button" onclick="switchTab('home')">Home</div>
         <div class="tab-button" onclick="switchTab('rekap')">Rekap</div>
+        <div class="tab-button" onclick="switchTab('mahasiswa')">Mahasiswa</div>
     </div>
 
     <div id="mainContent">
@@ -29,7 +30,7 @@
                 Website ini ditujukan untuk memudahkan dosen Departemen Teknik Geodesi FT UGM dalam pembuatan Portofolio Mata Kuliah
             </p>
             <p>
-                Link template RPKPS (New): <a href="https://docs.google.com/document/d/1IbZOPbS86Y_ltqz_8ketcmmel5wtKhQR/edit?usp=sharing&ouid=115539750102645325103&rtpof=true&sd=true">Template RPKPS (New)</a><br>
+                Link template RPKPS (New): <a href="https://drive.google.com/drive/folders/1ag3HJs5qA8oxGiXChU3iXuPaPKibbWd8?usp=sharing">Template RPKPS (New)</a><br>
                 Link RPKPS setiap mata kuliah: <a href="https://docs.google.com/spreadsheets/d/1k0fT4Xq_DxciS0LIzynbmjU6bwp4LM0V_L5bD917yBo/edit?usp=sharing">Basisdata RPKPS</a><br>
                 Link Peta Kurikulum: <a href="https://docs.google.com/spreadsheets/d/1bGLwJS37uzSJFAzyYarP0eGzbNK8EkoO/edit?usp=sharing&ouid=115539750102645325103&rtpof=true&sd=true">Peta Kurikulum</a>
             </p>
@@ -128,6 +129,7 @@
 
             <div class="button-group">
                 <button class="main-button" onclick="sendToSheet()">Sync CPL & PI</button>
+                <button class="main-button" onclick="sendMahasiswaNilai()">Kirim Nilai Per Mahasiswa</button>
                 <button class="main-button" onclick="generateAndDownloadFullPortfolio()">Download Portofolio</button>
             </div>
 
@@ -136,10 +138,32 @@
         <div id="rekapTab" class="tab-content">
             <h2>Rekapitulasi Capaian CPL</h2>
             <canvas id="soRadarChart" width="400" height="400"></canvas>
-            <div id="cplTableContainer"></div>
+            <div id="cplTableContainer" class="table-container"></div>
 
             <h2>Rekapitulasi Capaian PI</h2>
             <canvas id="rekapPiChart" width="800" height="400"></canvas>
+            <div id="piTableContainer" class="table-container"></div>
+        </div>
+
+        <div id="mahasiswaTab" class="tab-content">
+            <h2>Portofolio Mahasiswa</h2>
+            <div class="input-group">
+            <label for="searchNIM"><strong>Cari Mahasiswa (NIM):</strong></label>
+            <div class="search-container">
+                <input type="text" id="searchNIM" placeholder="Cari NIM mahasiswa..." oninput="filterMahasiswa()" autocomplete="off">
+                <span class="search-icon">🔍</span>
+                <div id="nimSuggestions" class="suggestions-box"></div>
+            </div>
+            <button class="main-button" onclick="loadStudentPortfolio()">Tampilkan Portofolio</button>
+            </div>
+
+            <div id="studentCourses"></div>
+            <h3>Nilai CPL</h3>
+            <canvas id="studentCPLChart" style="max-width: 100%; margin-top: 30px;"></canvas>
+            <div id="studentCPLTable" style="margin-top: 20px;"></div>
+            <h3>Nilai PI</h3>
+            <canvas id="studentPiChart" style="max-width: 100%; margin-top: 30px;"></canvas>
+            <div id="studentPiTable" style="margin-top: 20px;"></div>
         </div>
     </div>
 

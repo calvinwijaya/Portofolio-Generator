@@ -166,6 +166,12 @@ button {
   width: 100%;
 }
 
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
 #searchMK {
   width: 100%;
   padding-right: 30px;
@@ -195,6 +201,14 @@ button {
   overflow-y: auto;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   display: none;
+}
+
+.suggestion-item {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.suggestion-item:hover {
+  background-color: #f0f0f0;
 }
 
 .suggestions-box div {
@@ -324,4 +338,29 @@ button {
   font-family: inherit;
   resize: vertical;
   display: block;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table-container th,
+.table-container td {
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  text-align: center;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.table-container th {
+  background-color: #f0f0f0;
+  font-weight: bold;
 }

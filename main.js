@@ -332,22 +332,27 @@ function generateCSVTemplate() {
   const jumlah = parseInt(document.getElementById("jumlahMahasiswa").value);
   if (!jumlah || jumlah < 1) return alert("Masukkan jumlah mahasiswa terlebih dahulu!");
 
-  let rows = [["No.", "Deskripsi/PI"]];
   const assessments = document.querySelectorAll(".assessment-row");
-  const header = ["No."];
+
+  // Build header: No, NIM, Nama, then each Deskripsi/PI
+  const header = ["No.", "NIM", "Nama"];
   assessments.forEach(row => {
-    const deskripsi = row.children[2].value;
-    const pi = row.children[6].value;
+    const deskripsi = row.children[2].value.trim() || "Deskripsi";
+    const pi = row.children[6].value.trim() || "PI";
     header.push(`${deskripsi}/${pi}`);
   });
-  rows[0] = header;
 
+  // Build rows: No, NIM, Nama, then empty values
+  const rows = [header];
   for (let i = 1; i <= jumlah; i++) {
-    rows.push([i, ...Array(assessments.length).fill("")]);
+    rows.push([i, "", "", ...Array(assessments.length).fill("")]);
   }
 
-  let csvContent = rows.map(e => e.join(",")).join("\n");
+  // Convert to CSV format
+  const csvContent = rows.map(e => e.join(",")).join("\n");
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+  // Trigger download
   const link = document.createElement("a");
   link.setAttribute("href", URL.createObjectURL(blob));
   link.setAttribute("download", "template_nilai.csv");
@@ -718,6 +723,7 @@ function generateCPMKPortfolio() {
     });
 
     window.piData = piResultRows;
+    window.piMap = piMap;
 
     const piTableHtml = `
       <h3>Capaian PI</h3>
@@ -848,6 +854,95 @@ async function sendToSheet() {
   }
 }
 
+// Send PI score per student to Google Sheets
+async function sendMahasiswaNilai() {
+  const fileInput = document.getElementById('csvUpload');
+  const file = fileInput.files[0];
+  const mkName = document.getElementById('searchMK').value.trim();
+  const kelas = document.getElementById('kelas').value.trim();
+
+  if (!file) return alert("Silakan upload file CSV terlebih dahulu.");
+  if (!mkName || !kelas) return alert("Silakan isi Mata Kuliah dan Kelas terlebih dahulu.");
+
+  const reader = new FileReader();
+
+  reader.onload = async function (e) {
+    const csv = e.target.result;
+    const lines = csv.split('\n').filter(Boolean).map(line => line.split(',').map(cell => cell.trim()));
+    const headers = lines[0];
+    const dataRows = lines.slice(1);
+
+    const piHeaders = headers.slice(3); // Deskripsi/PI starts from index 3
+    const piMap = window.piMap; // from assessment table
+    if (!piMap) {
+      alert("Silakan generate CPMK Portofolio terlebih dahulu.");
+      return;
+    }
+
+    const studentData = dataRows.map(row => {
+      const nim = row[1];
+      const nama = row[2];
+      const piScores = row.slice(3).map(s => parseFloat(s));
+      const piData = {};
+
+      // Mapping headers to scores
+      const scoreMap = {};
+      piHeaders.forEach((h, i) => {
+        scoreMap[h] = piScores[i];
+      });
+
+      // Aggregate scores per PI using normalization
+      Object.entries(piMap).forEach(([pi, items]) => {
+        let total = 0, count = 0;
+
+        items.forEach(({ label, max }) => {
+          const rawScore = scoreMap[label];
+          if (!isNaN(rawScore)) {
+            total += (rawScore / max) * 100;
+            count++;
+          }
+        });
+
+        piData[pi] = count > 0 ? (total / count).toFixed(2) : "";
+      });
+
+      return {
+        "Nama Mata Kuliah": mkName,
+        "Kelas": kelas,
+        "NIM": nim,
+        "Nama": nama,
+        ...piData
+      };
+    });
+
+    document.getElementById("loadingOverlay").style.display = "flex";
+
+    for (const student of studentData) {
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(student));
+
+      try {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbwpIhkQlRcUBohuuMokKuW3y0wgJ7WaJH_TVP963D3-R2Jb_gbygE_oJU9nv7ARytc/exec", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+        if (result.result !== "success") {
+          console.warn(`Gagal kirim untuk ${student.NIM}: ${result.message}`);
+        }
+      } catch (err) {
+        console.error(`Error kirim data ${student.NIM}:`, err);
+      }
+    }
+
+    document.getElementById("loadingOverlay").style.display = "none";
+    alert("Data nilai mahasiswa berhasil dikirim!");
+  };
+
+  reader.readAsText(file);
+}
+
 // Load rekap data from Google Sheets
 async function loadRekapData() {
   document.getElementById("loadingOverlay").style.display = "flex";
@@ -895,6 +990,8 @@ async function loadRekapData() {
 
     drawCPLRadarChart(avgCPL);
     drawPIBarChart(avgPI);
+    renderCPLTable(rows, 'cplTableContainer');
+    renderPITable(rows, 'piTableContainer');
 
   } catch (err) {
     console.error("Gagal memuat rekap:", err);
@@ -1000,6 +1097,35 @@ function drawPIBarChart(avgData) {
     }
   });
 }
+
+function renderCPLTable(rows, containerId) {
+  const headers = ['Nama Mata Kuliah', 'Kelas', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
+  let html = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+
+  rows.forEach(row => {
+    html += '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function renderPITable(rows, containerId) {
+  const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
+    'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
+    'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'];
+
+  const headers = ['Nama Mata Kuliah', 'Kelas', ...piKeys];
+  let html = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+
+  rows.forEach(row => {
+    html += '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById(containerId).innerHTML = html;
+}
+
 
 // Download and process the portofolio template
 async function generateAndDownloadFullPortfolio() {
@@ -1134,4 +1260,331 @@ async function generateAndDownloadFullPortfolio() {
   } finally {
     document.getElementById("loadingOverlay").style.display = "none";
   }
+}
+
+// Function to load student portofolio
+function loadStudentPortfolio() {
+  const nimInput = document.getElementById("searchNIM").value.trim();
+  if (!nimInput) return;
+
+  const studentRows = allMahasiswaData.filter(row => String(row.NIM).trim() === nimInput);
+  if (studentRows.length === 0) {
+    document.getElementById("studentCourses").innerHTML = `<p>Tidak ditemukan data untuk NIM: ${nimInput}</p>`;
+    document.getElementById("studentPiTable").innerHTML = "";
+    return;
+  }
+
+  const studentName = studentRows[0]["Nama"] || "-";
+
+  // 1. Display Nama and NIM
+  let html = `<h3>Informasi Mahasiswa</h3>
+              <p><strong>Nama:</strong> ${studentName}</p>
+              <p><strong>NIM:</strong> ${nimInput}</p>`;
+
+  // 2. Display Daftar Mata Kuliah
+  html += `<h3>Daftar Mata Kuliah</h3><ul>`;
+  studentRows.forEach(row => {
+    html += `<li><strong>${row["Nama Mata Kuliah"]} (Kelas ${row.Kelas})</strong></li>`;
+  });
+  html += `</ul>`;
+  document.getElementById("studentCourses").innerHTML = html;
+
+  // 3. Draw horizontal PI table
+  renderPITable(studentRows, "studentPiTable");
+
+  // 4. Draw PI bar chart with threshold
+  const piKeys = [
+    'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
+    'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
+    'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'
+  ];
+
+  const avgPI = {};
+  const countPI = {};
+  piKeys.forEach(key => {
+    studentRows.forEach(row => {
+      const val = parseFloat(row[key]);
+      if (!isNaN(val)) {
+        avgPI[key] = (avgPI[key] || 0) + val;
+        countPI[key] = (countPI[key] || 0) + 1;
+      }
+    });
+  });
+
+  const avgData = piKeys.map(key => ({
+    label: key,
+    value: avgPI[key] ? (avgPI[key] / countPI[key]) : 0
+  }));
+
+  drawStudentPIChart(avgData);
+
+  const cplData = calculateCPLFromPI(studentRows);
+  drawStudentCPLRadarChart(cplData);
+
+  const cplRow = { "Nama Mata Kuliah": "Rata-rata", "Kelas": "-" };
+  cplData.forEach(cpl => {
+    cplRow[cpl.label] = cpl.value.toFixed(2);
+  });
+  renderCPLTable([cplRow], "studentCPLTable");
+}
+
+function drawStudentCPLRadarChart(avgData) {
+  const soLabels = avgData.map(d => `CPL ${d.label}`);
+  const soValues = avgData.map(d => d.value.toFixed(2));
+  const thresholdSO = Array(avgData.length).fill(70);
+
+  const ctx = document.getElementById('studentCPLChart').getContext('2d');
+  if (window.studentCPLChart instanceof Chart) {
+    window.studentCPLChart.destroy();
+  }
+
+  window.studentCPLChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: soLabels,
+      datasets: [
+        {
+          label: 'Nilai CPL',
+          data: soValues,
+          backgroundColor: 'rgba(21, 101, 192, 0.2)',
+          borderColor: '#1565c0',
+          pointBackgroundColor: '#1565c0',
+          fill: true
+        },
+        {
+          label: 'Standar (70)',
+          data: thresholdSO,
+          borderColor: 'rgba(255, 193, 7, 1)',
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 10 },
+          grid: { circular: true },
+          pointLabels: { font: { size: 12 } }
+        }
+      }
+    }
+  });
+}
+
+function renderCPLTable(rows, containerId) {
+  const cplKeys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
+  const headers = ['Nama Mata Kuliah', 'Kelas', ...cplKeys];
+
+  let html = '<table border="1" cellpadding="6"><thead><tr>' +
+             headers.map(h => `<th>${h}</th>`).join('') +
+             '</tr></thead><tbody>';
+
+  // Table rows per course
+  rows.forEach(row => {
+    html += '<tr>' +
+            headers.map(h => `<td>${row[h] || ''}</td>`).join('') +
+            '</tr>';
+  });
+
+  html += '</tbody></table>';
+
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function renderPITable(rows, containerId) {
+  const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
+    'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
+    'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'];
+
+  const headers = ['Nama Mata Kuliah', 'Kelas', ...piKeys];
+  let html = '<table border="1" cellpadding="6"><thead><tr>' +
+             headers.map(h => `<th>${h}</th>`).join('') +
+             '</tr></thead><tbody>';
+
+  // Table rows per course
+  rows.forEach(row => {
+    html += '<tr>' +
+            headers.map(h => `<td>${row[h] || ''}</td>`).join('') +
+            '</tr>';
+  });
+
+  // Compute averages
+  const piSums = {}, piCounts = {};
+  piKeys.forEach(key => { piSums[key] = 0; piCounts[key] = 0; });
+
+  rows.forEach(row => {
+    piKeys.forEach(key => {
+      const val = parseFloat(row[key]);
+      if (!isNaN(val)) {
+        piSums[key] += val;
+        piCounts[key]++;
+      }
+    });
+  });
+
+  const avgRow = ['<strong>Rata-rata</strong>', ''];
+  piKeys.forEach(key => {
+    const avg = piCounts[key] > 0 ? (piSums[key] / piCounts[key]).toFixed(2) : '';
+    avgRow.push(`<strong>${avg}</strong>`);
+  });
+
+  html += '<tr>' + avgRow.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+  html += '</tbody></table>';
+
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function drawStudentPIChart(avgData) {
+  const labels = avgData.map(d => d.label);
+  const values = avgData.map(d => d.value.toFixed(2));
+  const threshold = Array(labels.length).fill(70);
+
+  const ctx = document.getElementById('studentPiChart').getContext('2d');
+  if (window.studentPiChart instanceof Chart) {
+    window.studentPiChart.destroy();
+  }
+
+  window.studentPiChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Nilai PI',
+          data: values,
+          backgroundColor: '#3f51b5'
+        },
+        {
+          label: 'Standar (70)',
+          data: threshold,
+          type: 'line',
+          borderColor: 'rgba(255, 193, 7, 1)',
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 10 },
+          grid: { drawOnChartArea: true }
+        },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function calculateCPLFromPI(studentRows) {
+  const piToCplMap = {
+    a: ['a1', 'a2', 'a3'],
+    b: ['b1', 'b2', 'b3', 'b4'],
+    c: ['c1', 'c2', 'c3', 'c4', 'c5'],
+    d: ['d1', 'd2', 'd3'],
+    e: ['e1', 'e2', 'e3', 'e4'],
+    f: ['f1', 'f2'],
+    g: ['g1', 'g2', 'g3', 'g4', 'g5'],
+    h: ['h1', 'h2'],
+    i: ['i1', 'i2'],
+    j: ['j1', 'j2'],
+    k: ['k1', 'k2', 'k3', 'k4']
+  };
+
+  const cplSums = {}, cplCounts = {};
+  Object.keys(piToCplMap).forEach(cpl => {
+    cplSums[cpl] = 0;
+    cplCounts[cpl] = 0;
+  });
+
+  studentRows.forEach(row => {
+    Object.entries(piToCplMap).forEach(([cpl, pis]) => {
+      pis.forEach(pi => {
+        const val = parseFloat(row[pi]);
+        if (!isNaN(val)) {
+          cplSums[cpl] += val;
+          cplCounts[cpl]++;
+        }
+      });
+    });
+  });
+
+  return Object.keys(piToCplMap).map(cpl => ({
+    label: cpl,
+    value: cplCounts[cpl] > 0 ? cplSums[cpl] / cplCounts[cpl] : 0
+  }));
+}
+
+// Function to filter Mahasiswa
+let allMahasiswaData = [];
+
+async function filterMahasiswa() {
+  const nimInputField = document.getElementById("searchNIM");
+  if (!nimInputField) return;
+
+  const input = nimInputField.value.trim().toLowerCase();
+  const suggestionBox = document.getElementById("nimSuggestions");
+  if (!suggestionBox) return;
+
+  suggestionBox.innerHTML = "";
+
+  if (allMahasiswaData.length === 0) {
+    try {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbxgaO9USl8PjDnBE6ZuvZCUTWrUY__gXR9KI73dmw46viBufV4SA_81arGQQb0TWWLx/exec");
+      allMahasiswaData = await response.json();
+    } catch (error) {
+      console.error("Gagal fetch data mahasiswa:", error);
+      suggestionBox.innerHTML = `<div style="color:red;">Gagal memuat data</div>`;
+      return;
+    }
+  }
+
+  if (!input) {
+    suggestionBox.style.display = "none";
+    return;
+  }
+
+  const uniqueMahasiswaMap = new Map();
+  allMahasiswaData.forEach(row => {
+    const nim = String(row.NIM).trim().toLowerCase();
+    if (!uniqueMahasiswaMap.has(nim)) {
+      uniqueMahasiswaMap.set(nim, row); 
+    }
+  });
+
+  const matched = Array.from(uniqueMahasiswaMap.values())
+    .filter(row => {
+      const nim = String(row.NIM).toLowerCase();
+      const nama = String(row.Nama || "").toLowerCase();
+      return nim.includes(input) || nama.includes(input);
+    })
+    .slice(0, 10);
+
+  matched.forEach(row => {
+    const div = document.createElement("div");
+    div.textContent = `${row.NIM} - ${row.Nama}`;
+    div.className = "suggestion-item";
+    div.onclick = () => {
+      nimInputField.value = row.NIM;
+      suggestionBox.innerHTML = "";
+      suggestionBox.style.display = "none";
+    };
+    suggestionBox.appendChild(div);
+  });
+
+  suggestionBox.style.display = matched.length > 0 ? "block" : "none";
 }
