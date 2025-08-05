@@ -1,4 +1,4 @@
-Sistem Koordinat
+Praktikum Analisis Citra Penginderaan Jauh
 Hitung Perataan
 Praktikum Sistem Basisdata
 Survei Terestris II
@@ -15,4 +15,5 @@ Jaring Kontrol Geodesi
 Survei Hidrografi II
 Praktikum Analisis Geospasial
 GNSS Terapan
+
 Praktikum GNSS Terapan
