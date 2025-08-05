@@ -15,5 +15,4 @@ Jaring Kontrol Geodesi
 Survei Hidrografi II
 Praktikum Analisis Geospasial
 GNSS Terapan
-
 Praktikum GNSS Terapan
