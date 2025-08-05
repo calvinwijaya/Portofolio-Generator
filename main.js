@@ -1227,7 +1227,7 @@ async function generateAndDownloadFullPortfolio() {
     });
 
     const originalName = result.name.replace(/\.[^/.]+$/, "");
-    const finalName = `Portofolio ${originalName}.docx`;
+    const finalName = `Portofolio ${originalName} - ${kelas}.docx`;
     
     const link = document.createElement("a");
     link.href = URL.createObjectURL(out);
