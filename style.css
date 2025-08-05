@@ -37,7 +37,17 @@ body {
 }
 
 .input-group {
+  display: grid;
   margin-bottom: 20px;
+  flex-direction: column;
+  width: 100px;
+}
+
+.input-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: nowrap;
+  align-items: flex-end;
 }
 
 label {
@@ -363,4 +373,43 @@ input[type="text"] {
 .table-container th {
   background-color: #f0f0f0;
   font-weight: bold;
+}
+
+.dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.dropdown-content {
+  display: flex;
+  flex-direction: column;
+  padding-left: 10px;
+}
+
+.dropdown-content.hidden {
+  display: none;
+}
+
+.sub-tab-button {
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: #007BFF;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+
+.sub-tab-button:hover {
+  background-color: #0056b3;
+  border-left: 3px solid #00bcd4;
+}
+
+#mkSuggestionsTS {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  width: 100%;
 }

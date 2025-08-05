@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.39.0/docxtemplater.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
     <div id="sidebar">
@@ -17,6 +18,13 @@
         <div class="tab-button" onclick="switchTab('home')">Home</div>
         <div class="tab-button" onclick="switchTab('rekap')">Rekap</div>
         <div class="tab-button" onclick="switchTab('mahasiswa')">Mahasiswa</div>
+        <div class="tab-button dropdown" onclick="toggleDropdown(event)">
+            Time Series ▼
+            <div class="dropdown-content hidden">
+                <div class="sub-tab-button" onclick="switchTab('timeprodi')">Prodi</div>
+                <div class="sub-tab-button" onclick="switchTab('timemk')">Mata Kuliah</div>
+            </div>
+        </div>
     </div>
 
     <div id="mainContent">
@@ -44,19 +52,27 @@
                 </div>
             </div>
 
-            <div class="input-group">
-            <label for="kelas">Pilih Kelas:</label>
-            <select id="kelas">
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="IUP">IUP</option>
-            </select>
-            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="kelas">Pilih Kelas:</label>
+                    <select id="kelas">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="IUP">IUP</option>
+                    </select>
+                </div>
 
-            <!-- <div class="button-group">
-                <button class="main-button" onclick="downloadPortofolioTemplate()">Download Template Portofolio</button>
-            </div> -->
+                <div class="input-group">
+                    <label for="tahun">Pilih Tahun-Semester:</label>
+                    <select id="tahun">
+                    <option value="2024-1">2024-1</option>
+                    <option value="2024-2">2024-2</option>
+                    <option value="2025-1">2025-1</option>
+                    <option value="2025-2">2025-2</option>
+                    </select>
+                </div>
+            </div>
 
             <div class="input-group">
                 <label>Berapa jumlah CPMK?</label>
@@ -66,7 +82,6 @@
             <div class="input-group">
                 <label>CPL MK:</label>
                 <div id="cplButtons" class="cpl-buttons">
-                <!-- Buttons A to K -->
                 </div>
             </div>
 
@@ -105,7 +120,7 @@
             </div>
 
             <div class="button-group">
-                <button class="main-button" onclick="generateCSVTemplate()">Generate CSV Template</button>
+                <button class="main-button" onclick="generateCSVTemplate()">Generate Template CSV</button>
                 <label for="csvUpload" class="main-button">Upload Nilai</label>
                 <input type="file" id="csvUpload" accept=".csv" style="display: none;" />
                 <button class="main-button" onclick="generateCPMKPortfolio()">Generate Portofolio</button>
@@ -128,21 +143,37 @@
             </div>
 
             <div class="button-group">
-                <button class="main-button" onclick="sendToSheet()">Sync CPL & PI</button>
-                <button class="main-button" onclick="sendMahasiswaNilai()">Kirim Nilai Per Mahasiswa</button>
                 <button class="main-button" onclick="generateAndDownloadFullPortfolio()">Download Portofolio</button>
+                <button class="main-button" onclick="sendToSheet()">Kirim Nilai MK</button>
+                <button class="main-button" onclick="sendMahasiswaNilai()">Kirim Nilai Mahasiswa</button>
             </div>
 
         </div>
 
         <div id="rekapTab" class="tab-content">
-            <h2>Rekapitulasi Capaian CPL</h2>
-            <canvas id="soRadarChart" width="400" height="400"></canvas>
-            <div id="cplTableContainer" class="table-container"></div>
+            <h2>Rekapitulasi Capaian Portofolio</h2>
 
-            <h2>Rekapitulasi Capaian PI</h2>
-            <canvas id="rekapPiChart" width="800" height="400"></canvas>
-            <div id="piTableContainer" class="table-container"></div>
+            <div class="input-group">
+                <label for="filterYear">Pilih Tahun:</label>
+                <select id="filterYear">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <!-- More options can be added here -->
+                </select>
+            </div>
+            <div class="input-group" style="align-self: flex-end;">
+                <button class="main-button" onclick="filterRekapByYear()">Show Portofolio</button>
+            </div>
+
+            <div id="rekapContent" style="display:none;">
+                <h3>Rekapitulasi Capaian CPL</h3>
+                <canvas id="soRadarChart" width="400" height="400"></canvas>
+                <div id="cplTableContainer" class="table-container"></div>
+
+                <h3>Rekapitulasi Capaian PI</h3>
+                <canvas id="rekapPiChart" width="800" height="400"></canvas>
+                <div id="piTableContainer" class="table-container"></div>
+            </div>
         </div>
 
         <div id="mahasiswaTab" class="tab-content">
@@ -164,6 +195,69 @@
             <h3>Nilai PI</h3>
             <canvas id="studentPiChart" style="max-width: 100%; margin-top: 30px;"></canvas>
             <div id="studentPiTable" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Time Series - Prodi -->
+        <div id="timeprodiTab" class="tab-content">
+            <h2>Time-Series CPL Prodi</h2>
+            <div class="input-row">
+                <div class="input-group">
+                <label for="tahunAwalProdi">Dari Tahun:</label>
+                <select id="tahunAwalProdi">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <!-- Add more as needed -->
+                </select>
+                </div>
+                <div class="input-group">
+                <label for="tahunAkhirProdi">Ke Tahun:</label>
+                <select id="tahunAkhirProdi">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                </select>
+                </div>
+            </div>
+            <button class="main-button" onclick="loadTimeProdiPortfolio()">Tampilkan Portofolio</button>
+            <div id="prodiChartContainer" style="max-width: 100%; margin-top: 30px;"></div>
+        </div>
+
+        <!-- Time Series - Mata Kuliah -->
+        <div id="timemkTab" class="tab-content">
+            <h2>Time-Series CPL Mata Kuliah</h2>
+
+            <div class="input-group">
+                <label for="pilihMKTS"><strong>Pilih Mata Kuliah:</strong></label>
+                <div class="search-container">
+                    <input
+                    type="text"
+                    id="pilihMKTS"
+                    placeholder="Cari mata kuliah..."
+                    oninput="filterMK_TS()"
+                    autocomplete="off"
+                    />
+                    <span class="search-icon">🔍</span>
+                    <div id="mkSuggestionsTS" class="suggestions-box"></div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                <label for="tahunAwalMK">Dari Tahun:</label>
+                <select id="tahunAwalMK">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                </select>
+                </div>
+                <div class="input-group">
+                <label for="tahunAkhirMK">Ke Tahun:</label>
+                <select id="tahunAkhirMK">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                </select>
+                </div>
+            </div>
+            <button class="main-button" onclick="loadTimeMKPortfolio()">Tampilkan Portofolio</button>
+            <div id="mkChartContainer" style="max-width: 100%; margin-top: 30px;"></div>
         </div>
     </div>
 

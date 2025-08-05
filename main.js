@@ -1,5 +1,3 @@
-// main.js
-
 // Sidebar panel
 function toggleSidebar() {
     const sidebar = document.getElementById("sidebar");
@@ -9,12 +7,25 @@ function toggleSidebar() {
 }
 
 function switchTab(tabId) {
-    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
-    document.getElementById(tabId + "Tab").classList.add("active");
-    
-    if (tabId === 'rekap') {
-      loadRekapData(); // auto-refresh when Rekap tab opened
+  // Hide all tabs
+  document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+  
+  const realTabId = tabId.endsWith("Tab") ? tabId : tabId + "Tab";
+
+  const target = document.getElementById(realTabId);
+  if (target) {
+    target.classList.add("active");
+  } else {
+    console.warn("Tab not found:", realTabId);
   }
+}
+
+function toggleDropdown(event) {
+  const dropdown = event.currentTarget.querySelector(".dropdown-content");
+  if (dropdown) {
+    dropdown.classList.toggle("hidden");
+  }
+  event.stopPropagation(); // prevent accidental bubbling
 }
 
 // Search Mata Kuliah
@@ -53,49 +64,6 @@ function filterMK() {
 
   suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
 }
-
-// // Generate portfolio template
-// async function downloadPortofolioTemplate() {
-//   const mkName = document.getElementById('searchMK').value.trim();
-//   if (!mkName) {
-//     alert("Silakan pilih Mata Kuliah terlebih dahulu.");
-//     return;
-//   }
-
-//   const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaZTwa9BXIuayN_5G2IVfoIbSWSJsac5zJ4ZH9FtZ4_GH3MAtlYcy7mqbT8RXm1JWbXA/exec';
-
-//   try {
-//     document.getElementById("loadingOverlay").style.display = "flex";
-//     const response = await fetch(`${scriptUrl}?nama=${encodeURIComponent(mkName)}`);
-//     const result = await response.json();
-
-//     if (result.status === "NOT_FOUND") {
-//       alert("Template Portofolio belum tersedia. RPKPS yang digunakan masih format lama. Silahkan ganti pada format baru dan sampaikan ke Mas Calvin/ Pak Cecep untuk mengupdate di database. Terima kasih.");
-//       return;
-//     }
-
-//     const byteCharacters = atob(result.base64);
-//     const byteNumbers = new Array(byteCharacters.length);
-//     for (let i = 0; i < byteCharacters.length; i++) {
-//       byteNumbers[i] = byteCharacters.charCodeAt(i);
-//     }
-//     const byteArray = new Uint8Array(byteNumbers);
-//     const blob = new Blob([byteArray], {
-//       type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-//     });
-
-//     const link = document.createElement("a");
-//     link.href = URL.createObjectURL(blob);
-//     link.download = result.name || `Portofolio ${mkName}.docx`;
-//     link.click();
-
-//   } catch (err) {
-//     console.error("Download error:", err);
-//     alert("Gagal mengunduh template portofolio. Silakan coba lagi.");
-//   } finally {
-//     document.getElementById("loadingOverlay").style.display = "none";
-//   }
-// }
 
 // Generate CPL buttons A to K
 const cplContainer = document.getElementById("cplButtons");
@@ -388,15 +356,15 @@ function generateCPMKPortfolio() {
 
     // Step 1: Build CPMK assessment map
     const rows = document.querySelectorAll('#assessmentRows > div');
-    const cpmkMap = {}; // { CPMK 1: [{label, max, persentase}], ... }
+    const cpmkMap = {};
 
     rows.forEach(row => {
       const selects = row.querySelectorAll('select');
       const inputs = row.querySelectorAll('input');
       const cpmk = selects[0].value;
       const label = inputs[0].value.trim() + '/' + selects[3].value.trim();
-      const maxScore = parseFloat(inputs[2].value);  // Nilai Maksimal
-      const persentase = parseFloat(inputs[1].value); // Persentase
+      const maxScore = parseFloat(inputs[2].value); 
+      const persentase = parseFloat(inputs[1].value);
 
       if (!cpmkMap[cpmk]) cpmkMap[cpmk] = [];
       cpmkMap[cpmk].push({ label, max: maxScore, persentase });
@@ -422,7 +390,7 @@ function generateCPMKPortfolio() {
         scores.forEach((row, i) => {
           const score = row[colIndex];
           if (!isNaN(score)) {
-            studentSums[i] += (score / max) * 100;  // ✅ normalize by nilai maksimal
+            studentSums[i] += (score / max) * 100;
             counts[i]++;
           }
         });
@@ -432,7 +400,7 @@ function generateCPMKPortfolio() {
       let validStudents = 0;
       studentSums.forEach((sum, i) => {
         if (counts[i] > 0) {
-          total += sum / counts[i];  // ✅ average of normalized scores for each student
+          total += sum / counts[i];
           validStudents++;
         }
       });
@@ -672,7 +640,7 @@ function generateCPMKPortfolio() {
       "k1", "k2", "k3", "k4"
     ];
 
-    const piMap = {};  // { a1: [{label, max}], ... }
+    const piMap = {}; 
 
     rows.forEach(row => {
       const selects = row.querySelectorAll('select');
@@ -680,7 +648,7 @@ function generateCPMKPortfolio() {
 
       const label = inputs[0].value.trim() + '/' + selects[3].value.trim();
       const max = parseFloat(inputs[2].value);
-      const pi = selects[3].value; // PI is the 4th select
+      const pi = selects[3].value; 
 
       if (!piMap[pi]) piMap[pi] = [];
       piMap[pi].push({ label, max });
@@ -807,6 +775,7 @@ function generateCPMKPortfolio() {
 async function sendToSheet() {
   const mkName = document.getElementById('searchMK').value.trim();
   const kelas = document.getElementById('kelas').value.trim();
+  const tahun = document.getElementById('tahun').value.trim();
   if (!mkName) {
     alert("Silakan pilih Nama Mata Kuliah terlebih dahulu.");
     return;
@@ -820,6 +789,7 @@ async function sendToSheet() {
   const payload = {
     "Nama Mata Kuliah": mkName,
     "Kelas": kelas,
+    "Tahun": tahun,
     ...window.usedCPLChartData,
     ...window.usedPIChartData
   };
@@ -835,7 +805,6 @@ async function sendToSheet() {
       {
         method: "POST",
         body: formData
-        // NO custom headers!
       }
     );
 
@@ -849,7 +818,6 @@ async function sendToSheet() {
     console.error("Error sending to sheet:", err);
     alert("Terjadi kesalahan saat mengirim data.");
   } finally {
-    // Hide loading
     document.getElementById("loadingOverlay").style.display = "none";
   }
 }
@@ -872,8 +840,8 @@ async function sendMahasiswaNilai() {
     const headers = lines[0];
     const dataRows = lines.slice(1);
 
-    const piHeaders = headers.slice(3); // Deskripsi/PI starts from index 3
-    const piMap = window.piMap; // from assessment table
+    const piHeaders = headers.slice(3); 
+    const piMap = window.piMap; 
     if (!piMap) {
       alert("Silakan generate CPMK Portofolio terlebih dahulu.");
       return;
@@ -944,7 +912,8 @@ async function sendMahasiswaNilai() {
 }
 
 // Load rekap data from Google Sheets
-async function loadRekapData() {
+async function filterRekapByYear() {
+  const selectedYear = document.getElementById("filterYear").value;
   document.getElementById("loadingOverlay").style.display = "flex";
 
   try {
@@ -952,53 +921,65 @@ async function loadRekapData() {
     const data = await response.json();
     if (!Array.isArray(data) || data.length === 0) throw new Error("Data kosong atau salah format");
 
-    const rows = data;
+    // Filter by Tahun prefix: matches "2024-1" or "2024-2"
+    const filteredRows = data.filter(row => String(row.Tahun || '').startsWith(selectedYear));
 
-    const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
-    const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5', 'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5', 'h1', 'h2', 'i1', 'i2', 'j1', 'j2','k1', 'k2', 'k3', 'k4'];
+    if (filteredRows.length === 0) {
+      alert(`Tidak ditemukan data untuk tahun ${selectedYear}`);
+      document.getElementById("rekapContent").style.display = "none";
+      return;
+    }
 
-    const cplSums = {}, cplCounts = {};
-    cplKeys.forEach(k => { cplSums[k] = 0; cplCounts[k] = 0; });
-
-    const piSums = {}, piCounts = {};
-    piKeys.forEach(k => { piSums[k] = 0; piCounts[k] = 0; });
-
-    rows.forEach(row => {
-      Object.entries(row).forEach(([h, val]) => {
-        const num = parseFloat(val);
-        if (!isNaN(num)) {
-          if (cplKeys.includes(h)) {
-            cplSums[h] += num;
-            cplCounts[h]++;
-          } else if (piKeys.includes(h)) {
-            piSums[h] += num;
-            piCounts[h]++;
-          }
-        }
-      });
-    });
-
-    const avgCPL = cplKeys.map(k => ({
-      label: k.toUpperCase(),
-      value: cplCounts[k] ? (cplSums[k] / cplCounts[k]) : 0
-    }));
-
-    const avgPI = piKeys.map(k => ({
-      label: k.toLowerCase(),
-      value: piCounts[k] ? (piSums[k] / piCounts[k]) : 0
-    }));
-
-    drawCPLRadarChart(avgCPL);
-    drawPIBarChart(avgPI);
-    renderCPLTable(rows, 'cplTableContainer');
-    renderPITable(rows, 'piTableContainer');
+    processAndDisplayRekap(filteredRows);
+    document.getElementById("rekapContent").style.display = "block";
 
   } catch (err) {
-    console.error("Gagal memuat rekap:", err);
+    console.error("Gagal memuat data rekap:", err);
     alert("Gagal memuat data rekap. Silakan coba lagi.");
   } finally {
     document.getElementById("loadingOverlay").style.display = "none";
   }
+}
+
+function processAndDisplayRekap(rows) {
+  const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
+  const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5', 'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5', 'h1', 'h2', 'i1', 'i2', 'j1', 'j2','k1', 'k2', 'k3', 'k4'];
+
+  const cplSums = {}, cplCounts = {};
+  cplKeys.forEach(k => { cplSums[k] = 0; cplCounts[k] = 0; });
+
+  const piSums = {}, piCounts = {};
+  piKeys.forEach(k => { piSums[k] = 0; piCounts[k] = 0; });
+
+  rows.forEach(row => {
+    Object.entries(row).forEach(([h, val]) => {
+      const num = parseFloat(val);
+      if (!isNaN(num)) {
+        if (cplKeys.includes(h)) {
+          cplSums[h] += num;
+          cplCounts[h]++;
+        } else if (piKeys.includes(h)) {
+          piSums[h] += num;
+          piCounts[h]++;
+        }
+      }
+    });
+  });
+
+  const avgCPL = cplKeys.map(k => ({
+    label: k.toUpperCase(),
+    value: cplCounts[k] ? (cplSums[k] / cplCounts[k]) : 0
+  }));
+
+  const avgPI = piKeys.map(k => ({
+    label: k.toLowerCase(),
+    value: piCounts[k] ? (piSums[k] / piCounts[k]) : 0
+  }));
+
+  drawCPLRadarChart(avgCPL);
+  drawPIBarChart(avgPI);
+  renderCPLTable(rows, 'cplTableContainer');
+  renderPITable(rows, 'piTableContainer');
 }
 
 // Draw rekap data
@@ -1125,7 +1106,6 @@ function renderPITable(rows, containerId) {
   html += '</tbody></table>';
   document.getElementById(containerId).innerHTML = html;
 }
-
 
 // Download and process the portofolio template
 async function generateAndDownloadFullPortfolio() {
@@ -1263,69 +1243,92 @@ async function generateAndDownloadFullPortfolio() {
 }
 
 // Function to load student portofolio
-function loadStudentPortfolio() {
+async function loadStudentPortfolio() {
   const nimInput = document.getElementById("searchNIM").value.trim();
   if (!nimInput) return;
 
-  const studentRows = allMahasiswaData.filter(row => String(row.NIM).trim() === nimInput);
-  if (studentRows.length === 0) {
-    document.getElementById("studentCourses").innerHTML = `<p>Tidak ditemukan data untuk NIM: ${nimInput}</p>`;
-    document.getElementById("studentPiTable").innerHTML = "";
-    return;
-  }
+  try {
+    document.getElementById("loadingOverlay").style.display = "flex";
 
-  const studentName = studentRows[0]["Nama"] || "-";
+    // Fetch data directly for the selected NIM only
+    let studentRows = [];
+    try {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbxgaO9USl8PjDnBE6ZuvZCUTWrUY__gXR9KI73dmw46viBufV4SA_81arGQQb0TWWLx/exec");
+      const allData = await response.json();
+      studentRows = allData.filter(row => String(row.NIM).trim() === nimInput);
+    } catch (error) {
+      console.error("Gagal memuat data mahasiswa:", error);
+      document.getElementById("studentCourses").innerHTML = `<p style="color:red;">Gagal memuat data mahasiswa.</p>`;
+      return;
+    }
 
-  // 1. Display Nama and NIM
-  let html = `<h3>Informasi Mahasiswa</h3>
-              <p><strong>Nama:</strong> ${studentName}</p>
-              <p><strong>NIM:</strong> ${nimInput}</p>`;
+    // const studentRows = allMahasiswaData.filter(row => String(row.NIM).trim() === nimInput);
 
-  // 2. Display Daftar Mata Kuliah
-  html += `<h3>Daftar Mata Kuliah</h3><ul>`;
-  studentRows.forEach(row => {
-    html += `<li><strong>${row["Nama Mata Kuliah"]} (Kelas ${row.Kelas})</strong></li>`;
-  });
-  html += `</ul>`;
-  document.getElementById("studentCourses").innerHTML = html;
+    if (studentRows.length === 0) {
+      document.getElementById("studentCourses").innerHTML = `<p>Tidak ditemukan data untuk NIM: ${nimInput}</p>`;
+      document.getElementById("studentPiTable").innerHTML = "";
+      return;
+    }
 
-  // 3. Draw horizontal PI table
-  renderPITable(studentRows, "studentPiTable");
+    const studentName = studentRows[0]["Nama"] || "-";
 
-  // 4. Draw PI bar chart with threshold
-  const piKeys = [
-    'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
-    'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
-    'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'
-  ];
+    // 1. Display Nama and NIM
+    let html = `<h3>Informasi Mahasiswa</h3>
+                <p><strong>Nama:</strong> ${studentName}</p>
+                <p><strong>NIM:</strong> ${nimInput}</p>`;
 
-  const avgPI = {};
-  const countPI = {};
-  piKeys.forEach(key => {
+    // 2. Display Daftar Mata Kuliah
+    html += `<h3>Daftar Mata Kuliah</h3><ul>`;
     studentRows.forEach(row => {
-      const val = parseFloat(row[key]);
-      if (!isNaN(val)) {
-        avgPI[key] = (avgPI[key] || 0) + val;
-        countPI[key] = (countPI[key] || 0) + 1;
-      }
+      html += `<li>${row["Nama Mata Kuliah"]} (Kelas ${row.Kelas})</li>`;
     });
-  });
+    html += `</ul>`;
+    document.getElementById("studentCourses").innerHTML = html;
 
-  const avgData = piKeys.map(key => ({
-    label: key,
-    value: avgPI[key] ? (avgPI[key] / countPI[key]) : 0
-  }));
+    // 3. Draw horizontal PI table
+    renderPITable(studentRows, "studentPiTable");
 
-  drawStudentPIChart(avgData);
+    // 4. Draw PI bar chart with threshold
+    const piKeys = [
+      'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
+      'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
+      'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'
+    ];
 
-  const cplData = calculateCPLFromPI(studentRows);
-  drawStudentCPLRadarChart(cplData);
+    const avgPI = {};
+    const countPI = {};
+    piKeys.forEach(key => {
+      studentRows.forEach(row => {
+        const val = parseFloat(row[key]);
+        if (!isNaN(val)) {
+          avgPI[key] = (avgPI[key] || 0) + val;
+          countPI[key] = (countPI[key] || 0) + 1;
+        }
+      });
+    });
 
-  const cplRow = { "Nama Mata Kuliah": "Rata-rata", "Kelas": "-" };
-  cplData.forEach(cpl => {
-    cplRow[cpl.label] = cpl.value.toFixed(2);
-  });
-  renderCPLTable([cplRow], "studentCPLTable");
+    const avgData = piKeys.map(key => ({
+      label: key,
+      value: avgPI[key] ? (avgPI[key] / countPI[key]) : 0
+    }));
+
+    drawStudentPIChart(avgData);
+
+    const cplData = calculateCPLFromPI(studentRows);
+    drawStudentCPLRadarChart(cplData);
+
+    const cplRow = { "Nama Mata Kuliah": "Rata-rata", "Kelas": "-" };
+    cplData.forEach(cpl => {
+      cplRow[cpl.label] = cpl.value.toFixed(2);
+    });
+    renderCPLTable([cplRow], "studentCPLTable");
+  } catch (error) {
+    console.error("Gagal memuat data mahasiswa:", error);
+    document.getElementById("studentCourses").innerHTML = `<p style="color:red;">Gagal memuat data mahasiswa.</p>`;
+  } finally {
+    // Hide loading spinner
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
 }
 
 function drawStudentCPLRadarChart(avgData) {
@@ -1529,62 +1532,314 @@ function calculateCPLFromPI(studentRows) {
   }));
 }
 
-// Function to filter Mahasiswa
-let allMahasiswaData = [];
+// Load and filter mahasiswa data for NIM suggestions
+let mahasiswaList = [];
 
-async function filterMahasiswa() {
-  const nimInputField = document.getElementById("searchNIM");
-  if (!nimInputField) return;
+fetch('Daftar_MHS.csv')
+  .then(response => response.text())
+  .then(csvText => {
+    const parsed = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true
+    });
+    mahasiswaList = parsed.data;
+  });
 
-  const input = nimInputField.value.trim().toLowerCase();
-  const suggestionBox = document.getElementById("nimSuggestions");
-  if (!suggestionBox) return;
-
-  suggestionBox.innerHTML = "";
-
-  if (allMahasiswaData.length === 0) {
-    try {
-      const response = await fetch("https://script.google.com/macros/s/AKfycbxgaO9USl8PjDnBE6ZuvZCUTWrUY__gXR9KI73dmw46viBufV4SA_81arGQQb0TWWLx/exec");
-      allMahasiswaData = await response.json();
-    } catch (error) {
-      console.error("Gagal fetch data mahasiswa:", error);
-      suggestionBox.innerHTML = `<div style="color:red;">Gagal memuat data</div>`;
-      return;
-    }
-  }
+function filterMahasiswa() {
+  const input = document.getElementById('searchNIM').value.toLowerCase();
+  const suggestionBox = document.getElementById('nimSuggestions');
+  suggestionBox.innerHTML = '';
 
   if (!input) {
-    suggestionBox.style.display = "none";
+    suggestionBox.style.display = 'none';
     return;
   }
 
-  const uniqueMahasiswaMap = new Map();
-  allMahasiswaData.forEach(row => {
-    const nim = String(row.NIM).trim().toLowerCase();
-    if (!uniqueMahasiswaMap.has(nim)) {
-      uniqueMahasiswaMap.set(nim, row); 
-    }
-  });
-
-  const matched = Array.from(uniqueMahasiswaMap.values())
-    .filter(row => {
-      const nim = String(row.NIM).toLowerCase();
-      const nama = String(row.Nama || "").toLowerCase();
-      return nim.includes(input) || nama.includes(input);
-    })
+  const matched = mahasiswaList
+    .filter(m => m.NIM.toLowerCase().includes(input) || m.Nama.toLowerCase().includes(input))
     .slice(0, 10);
 
-  matched.forEach(row => {
-    const div = document.createElement("div");
-    div.textContent = `${row.NIM} - ${row.Nama}`;
-    div.className = "suggestion-item";
+  matched.forEach(m => {
+    const div = document.createElement('div');
+    div.textContent = `${m.NIM} - ${m.Nama}`;
+    div.className = 'suggestion-item';
     div.onclick = () => {
-      nimInputField.value = row.NIM;
-      suggestionBox.innerHTML = "";
-      suggestionBox.style.display = "none";
+      document.getElementById('searchNIM').value = m.NIM;
+      suggestionBox.innerHTML = '';
+      suggestionBox.style.display = 'none';
     };
     suggestionBox.appendChild(div);
   });
 
-  suggestionBox.style.display = matched.length > 0 ? "block" : "none";
+  suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
+}
+
+// Load and visualize time series CPL Prodi
+async function loadTimeProdiPortfolio() {
+  const tahunAwal = document.getElementById("tahunAwalProdi").value;
+  const tahunAkhir = document.getElementById("tahunAkhirProdi").value;
+  const container = document.getElementById("prodiChartContainer");
+  container.innerHTML = "";
+
+  if (!tahunAwal || !tahunAkhir || tahunAwal > tahunAkhir) {
+    alert("Pastikan tahun awal dan akhir terisi dengan benar.");
+    return;
+  }
+
+  document.getElementById("loadingOverlay").style.display = "flex";
+
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbzAKL2_QaqkkDiFx27eEUQWQgrZ6FCY6y7zbeLUkUpWON3NyrcrP7G06ESeaO4l_okl/exec');
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error("Data kosong atau salah format");
+
+    const allYears = [];
+    for (let y = parseInt(tahunAwal); y <= parseInt(tahunAkhir); y++) {
+      allYears.push(`${y}-1`, `${y}-2`);
+    }
+
+    const yearGroups = {}; // { 2024: [rows from 2024-1 and 2024-2], ... }
+
+    data.forEach(row => {
+      const tahun = String(row.Tahun || '').trim();
+      const yearPrefix = tahun.split('-')[0];
+
+      if (parseInt(yearPrefix) >= parseInt(tahunAwal) && parseInt(yearPrefix) <= parseInt(tahunAkhir)) {
+        if (!yearGroups[yearPrefix]) yearGroups[yearPrefix] = [];
+        yearGroups[yearPrefix].push(row);
+      }
+    });
+
+    const datasets = [];
+    const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
+
+    Object.entries(yearGroups).forEach(([year, rows]) => {
+      const sums = {}, counts = {};
+      cplKeys.forEach(k => { sums[k] = 0; counts[k] = 0; });
+
+      rows.forEach(row => {
+        cplKeys.forEach(k => {
+          const val = parseFloat(row[k]);
+          if (!isNaN(val)) {
+            sums[k] += val;
+            counts[k]++;
+          }
+        });
+      });
+
+      const values = cplKeys.map(k => counts[k] ? (sums[k] / counts[k]) : 0);
+      datasets.push({
+        label: `Tahun ${year}`,
+        data: values
+      });
+    });
+
+    drawTimeSeriesBarChart(cplKeys.map(k => k.toUpperCase()), datasets, "prodiChartContainer");
+
+  } catch (err) {
+    console.error("Gagal memuat data time series:", err);
+    alert("Gagal memuat data. Silakan coba lagi.");
+  } finally {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
+}
+
+// Draw multi-series bar chart
+function drawTimeSeriesBarChart(labels, datasets, containerId) {
+  const ctxId = containerId + "Canvas";
+  const canvas = document.createElement("canvas");
+  canvas.id = ctxId;
+  document.getElementById(containerId).appendChild(canvas);
+
+  const colors = [
+    "rgba(255, 99, 132, 0.6)",
+    "rgba(54, 162, 235, 0.6)",
+    "rgba(255, 206, 86, 0.6)",
+    "rgba(75, 192, 192, 0.6)",
+    "rgba(153, 102, 255, 0.6)",
+    "rgba(255, 159, 64, 0.6)"
+  ];
+
+  new Chart(canvas.getContext("2d"), {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: datasets.map((ds, i) => ({
+        label: ds.label,
+        data: ds.data,
+        backgroundColor: colors[i % colors.length],
+      }))
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Time-Series CPL Prodi",
+          font: {
+            size: 20,
+            weight: 'bold'
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      },
+      scales: {
+        x: { stacked: false },
+        y: { beginAtZero: true, max: 100, ticks: { stepSize: 10 }, stacked: false },
+      }
+    }
+  });
+}
+
+function filterMK_TS() {
+  const input = document.getElementById('pilihMKTS').value.toLowerCase();
+  const suggestionBox = document.getElementById('mkSuggestionsTS');
+  suggestionBox.innerHTML = '';
+
+  if (!input) {
+    suggestionBox.style.display = 'none';
+    return;
+  }
+
+  const matched = mkList.filter(mk => mk.toLowerCase().includes(input)).slice(0, 10);
+
+  matched.forEach(mk => {
+    const div = document.createElement('div');
+    div.textContent = mk;
+    div.onclick = () => {
+      document.getElementById('pilihMKTS').value = mk;
+      suggestionBox.innerHTML = '';
+      suggestionBox.style.display = 'none';
+    };
+    suggestionBox.appendChild(div);
+  });
+
+  suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
+}
+
+async function loadTimeMKPortfolio() {
+  const mkInput = document.getElementById("pilihMKTS").value.trim();
+  const tahunAwal = document.getElementById("tahunAwalMK").value;
+  const tahunAkhir = document.getElementById("tahunAkhirMK").value;
+  const container = document.getElementById("mkChartContainer");
+  container.innerHTML = "";
+
+  if (!mkInput || !tahunAwal || !tahunAkhir || tahunAwal > tahunAkhir) {
+    alert("Mohon lengkapi semua input dengan benar.");
+    return;
+  }
+
+  document.getElementById("loadingOverlay").style.display = "flex";
+
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbzAKL2_QaqkkDiFx27eEUQWQgrZ6FCY6y7zbeLUkUpWON3NyrcrP7G06ESeaO4l_okl/exec');
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error("Data kosong atau salah format");
+
+    const allYears = [];
+    for (let y = parseInt(tahunAwal); y <= parseInt(tahunAkhir); y++) {
+      allYears.push(`${y}-1`, `${y}-2`);
+    }
+
+    const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
+    const datasets = [];
+
+    allYears.forEach(yr => {
+      const rows = data.filter(row =>
+        String(row.Tahun || '').trim() === yr &&
+        String(row["Nama Mata Kuliah"] || '').trim().toLowerCase() === mkInput.toLowerCase()
+      );
+
+      const sums = {}, counts = {};
+      cplKeys.forEach(k => { sums[k] = 0; counts[k] = 0; });
+
+      rows.forEach(row => {
+        cplKeys.forEach(k => {
+          const val = parseFloat(row[k]);
+          if (!isNaN(val)) {
+            sums[k] += val;
+            counts[k]++;
+          }
+        });
+      });
+
+      const values = cplKeys.map(k => counts[k] ? (sums[k] / counts[k]) : 0);
+      if (rows.length > 0) {
+        datasets.push({ label: yr, data: values });
+      }
+    });
+
+    if (datasets.length === 0) {
+      alert("Data tidak ditemukan untuk kombinasi tersebut.");
+      return;
+    }
+
+    drawTimeSeriesMhsBarChart(cplKeys.map(k => k.toUpperCase()), datasets, "mkChartContainer");
+
+  } catch (err) {
+    console.error("Gagal memuat data MK Time Series:", err);
+    alert("Terjadi kesalahan saat memuat data.");
+  } finally {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
+}
+
+function drawTimeSeriesMhsBarChart(labels, datasets, canvasId) {
+  const container = document.getElementById(canvasId);
+  container.innerHTML = ""; // remove previous canvas
+  const canvas = document.createElement("canvas");
+  container.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+
+  // Clear previous chart (if any)
+  if (canvas._chartInstance) {
+    canvas._chartInstance.destroy();
+  }
+
+  const colors = [
+    "rgba(255, 99, 132, 0.6)",
+    "rgba(54, 162, 235, 0.6)",
+    "rgba(255, 206, 86, 0.6)",
+    "rgba(75, 192, 192, 0.6)",
+    "rgba(153, 102, 255, 0.6)",
+    "rgba(255, 159, 64, 0.6)"
+  ];
+
+  const chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: datasets.map((ds, i) => ({
+        label: ds.label,
+        data: ds.data,
+        backgroundColor: colors[i % colors.length],
+      }))
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Time-Series CPL Mata Kuliah",
+          font: {
+            size: 20,
+            weight: 'bold'
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      },
+      scales: {
+        x: { stacked: false },
+        y: { beginAtZero: true, max: 100, ticks: { stepSize: 10 }, stacked: false },
+      }
+    }
+  });
+
+  canvas._chartInstance = chart;
 }
