@@ -16,3 +16,4 @@ Survei Hidrografi II
 Praktikum Analisis Geospasial
 GNSS Terapan
 Praktikum GNSS Terapan
+Analisis Statistika
