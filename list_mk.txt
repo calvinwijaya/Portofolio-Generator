@@ -13,6 +13,7 @@ Pemrograman Komputer
 Pemrograman Spasial
 Praktikum Analisis Citra Penginderaan Jauh
 Praktikum Analisis Geospasial
+Praktikum Fotogrametri Dasar
 Praktikum GNSS Terapan
 Praktikum Grafika Komputer dan Visualisasi
 Praktikum Kartografi
@@ -21,6 +22,7 @@ Praktikum Penginderaan Jauh
 Praktikum SIG Berbasis Web
 Praktikum SIG Terapan
 Praktikum Sistem Basisdata
+Praktikum Sistem Fotogrametri Digital
 Praktikum Sistem Informasi Geografis
 Praktikum Survei GNSS
 Praktikum Survei Hidrografi I
