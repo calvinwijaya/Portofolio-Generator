@@ -1,0 +1,42 @@
+Praktikum Analisis Citra Penginderaan Jauh
+Hitung Perataan
+Praktikum Sistem Basisdata
+Survei Terestris II
+Praktikum Survei Terestris II
+Proyeksi Peta
+Kartografi
+Praktikum Kartografi
+Praktikum Grafika Komputer dan Visualisasi
+Praktikum Penginderaan Jauh
+Survei Kadastral
+Praktikum Survei Kadastral
+Metodologi Penelitian
+Jaring Kontrol Geodesi
+Survei Hidrografi II
+Praktikum Analisis Geospasial
+GNSS Terapan
+Praktikum GNSS Terapan
+Analisis Statistika
+Geodesi Fisis
+Geometri Diferensial
+Manajemen dan Kewirausahaan
+Matematika Diskrit
+Mitigasi dan Manajemen Bencana
+Pemrograman Komputer
+Praktikum Pemrograman Komputer
+Pemrograman Spasial
+Praktikum SIG Berbasis Web
+Praktikum SIG Terapan
+Praktikum Sistem Informasi Geografis
+Praktikum Survei GNSS
+Praktikum Survei Hidrografi I
+Praktikum Survei Pertambangan
+Praktikum Survei Rute
+Praktikum Survei Terestris I
+Praktikum Survei Terestris III
+Statistika Dasar
+Survei Deformasi
+Survei GNSS
+Survei Hidrografi I
+Survei Pertambangan
+Survei Terestris I
