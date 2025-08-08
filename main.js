@@ -30,13 +30,47 @@ function toggleDropdown(event) {
 
 // Search Mata Kuliah
 let mkList = [];
+let selectedJenjang = null; // already set in the jenjang button script
 
-// Load mata kuliah list from list_mk.txt
-fetch('list_mk.txt')
-  .then(response => response.text())
-  .then(text => {
-    mkList = text.split('\n').map(line => line.trim()).filter(Boolean);
-  });
+// Function to load MK list based on jenjang
+function loadMKList(jenjang) {
+  let fileName = "";
+  if (jenjang === "S1") fileName = "list_mk_s1.txt";
+  else if (jenjang === "S2") fileName = "list_mk_s2.txt";
+  else if (jenjang === "S3") fileName = "list_mk_s3.txt";
+
+  if (!fileName) return;
+
+  fetch(fileName)
+    .then(response => response.text())
+    .then(text => {
+      mkList = text.split('\n').map(line => line.trim()).filter(Boolean);
+      console.log(`Loaded MK list for ${jenjang}:`, mkList.length, "items");
+    })
+    .catch(err => console.error(`Failed to load ${fileName}`, err));
+}
+
+// Modify jenjang button logic so it reloads MK list
+const jenjangContainer = document.getElementById("jenjangButtons");
+const jenjangList = ["S1", "S2", "S3"];
+
+jenjangList.forEach(jenjang => {
+  const btn = document.createElement("button");
+  btn.textContent = jenjang;
+  btn.classList.add("jenjang-button"); // different class now
+  btn.onclick = () => {
+    // Remove active from all jenjang buttons
+    document.querySelectorAll("#jenjangButtons .jenjang-button")
+      .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+    selectedJenjang = jenjang;
+
+    loadMKList(selectedJenjang);
+    generateCPLButtons(selectedJenjang);
+  };
+  jenjangContainer.appendChild(btn);
+});
 
 // Filter suggestions based on input
 function filterMK() {
@@ -65,21 +99,74 @@ function filterMK() {
   suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
 }
 
-// Generate CPL buttons A to K
-const cplContainer = document.getElementById("cplButtons");
+// === Jenjang-specific CPL and PI data ===
+const jenjangCPLData = {
+  S1: {
+    cplList: ["a","b","c","d","e","f","g","h","i","j","k"],
+    piMap: {
+      a: ["a1", "a2", "a3"],
+      b: ["b1", "b2", "b3", "b4"],
+      c: ["c1", "c2", "c3", "c4", "c5"],
+      d: ["d1", "d2", "d3"],
+      e: ["e1", "e2", "e3", "e4"],
+      f: ["f1", "f2"],
+      g: ["g1", "g2", "g3", "g4", "g5"],
+      h: ["h1", "h2"],
+      i: ["i1", "i2"],
+      j: ["j1", "j2"],
+      k: ["k1", "k2", "k3", "k4"]
+    }
+  },
+  S2: {
+    cplList: ["a","b","c","d","e","f","g","h"],
+    piMap: {
+      a: ["a1", "a2", "a3"],
+      b: ["b1", "b2", "b3", "b4"],
+      c: ["c1", "c2", "c3"],
+      d: ["d1", "d2", "d3", "d4", "d5"],
+      e: ["e1", "e2"],
+      f: ["f1", "f2", "f3", "f4"],
+      g: ["g1", "g2", "g3", "g4", "g5"],
+      h: ["h1", "h2", "h3", "h4"]
+    }
+  },
+  S3: {
+    cplList: ["a","b","c","d","e","f","g","h"],
+    piMap: {
+      a: ["a1", "a2"],
+      b: ["b1", "b2"],
+      c: ["c1", "c2", "c3"],
+      d: ["d1", "d2", "d3", "d4"],
+      e: ["e1", "e2", "e3", "e4"],
+      f: ["f1", "f2", "f3"],
+      g: ["g1", "g2", "g3"],
+      h: ["h1", "h2", "h3", "h4"]
+    }
+  }
+};
+
 const selectedCPL = new Set();
-for (let i = 97; i <= 107; i++) {
-  const char = String.fromCharCode(i);
-  const btn = document.createElement("button");
-  btn.textContent = char;
-  btn.classList.add("cpl-button");
-  btn.onclick = () => {
-    btn.classList.toggle("active");
-    if (selectedCPL.has(char)) selectedCPL.delete(char);
-    else selectedCPL.add(char);
-    updateAssessmentTable();
-  };
-  cplContainer.appendChild(btn);
+const cplContainer = document.getElementById("cplButtons");
+
+// === Generate CPL buttons based on selected Jenjang ===
+function generateCPLButtons(jenjang) {
+  cplContainer.innerHTML = "";
+  selectedCPL.clear();
+
+  if (!jenjang || !jenjangCPLData[jenjang]) return;
+
+  jenjangCPLData[jenjang].cplList.forEach(char => {
+    const btn = document.createElement("button");
+    btn.textContent = char;
+    btn.classList.add("cpl-button");
+    btn.onclick = () => {
+      btn.classList.toggle("active");
+      if (selectedCPL.has(char)) selectedCPL.delete(char);
+      else selectedCPL.add(char);
+      updateAssessmentTable();
+    };
+    cplContainer.appendChild(btn);
+  });
 }
 
 // Assessment Table
@@ -163,22 +250,14 @@ function updateAssessmentTable() {
   assessmentCount = 0;
 }
 
+// === Update PI dropdown based on CPL & Jenjang ===
 function updatePIDropdown(row, cpl) {
   const piSelect = row.querySelector("select:last-child");
   piSelect.innerHTML = "";
-  const options = {
-    a: ["a1", "a2", "a3"],
-    b: ["b1", "b2", "b3", "b4"],
-    c: ["c1", "c2", "c3", "c4", "c5"],
-    d: ["d1", "d2", "d3"],
-    e: ["e1", "e2", "e3", "e4"],
-    f: ["f1", "f2"],
-    g: ["g1", "g2", "g3", "g4", "g5"],
-    h: ["h1", "h2"],
-    i: ["i1", "i2"],
-    j: ["j1", "j2"],
-    k: ["k1", "k2", "k3", "k4"]
-  };
+
+  if (!selectedJenjang || !jenjangCPLData[selectedJenjang]) return;
+
+  const options = jenjangCPLData[selectedJenjang].piMap;
   (options[cpl] || []).forEach(pi => {
     const opt = document.createElement("option");
     opt.value = pi;
@@ -220,6 +299,7 @@ function saveTemplate() {
   const cplArray = [...selectedCPL];
 
   const rows = [
+    ["JENJANG", selectedJenjang || ""], // <-- store jenjang
     ["JUMLAH_CPMK", jumlahCPMK],
     ["CPL", ...cplArray],
     ["CPMK", "TIPE", "DESKRIPSI", "PERSENTASE", "MAKSIMAL", "CPL", "PI"]
@@ -256,14 +336,33 @@ function loadTemplate(event) {
   reader.onload = function (e) {
     const lines = e.target.result.split("\n").map(line => line.trim().split(","));
 
+    // Parse Jenjang
+    let jenjangFromFile = lines[0][1]?.trim();
+    if (jenjangFromFile && jenjangFromFile !== selectedJenjang) {
+      selectedJenjang = jenjangFromFile;
+
+      // Highlight Jenjang button after loading
+      document.querySelectorAll("#jenjangButtons .jenjang-button").forEach(btn => {
+        if (btn.textContent.trim() === selectedJenjang) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+
+      // Reload MK list and CPL buttons for this jenjang
+      loadMKList(selectedJenjang);
+      generateCPLButtons(selectedJenjang);
+    }
+
     // Parse jumlah CPMK
-    const jumlahCPMK = parseInt(lines[0][1]);
+    const jumlahCPMK = parseInt(lines[1][1]);
     document.getElementById("jumlahCPMK").value = jumlahCPMK;
 
-    // Parse CPL
+    // Parse CPL selection (AFTER generateCPLButtons so highlight is kept)
     selectedCPL.clear();
     document.querySelectorAll(".cpl-button").forEach(btn => {
-      if (lines[1].includes(btn.textContent)) {
+      if (lines[2].includes(btn.textContent)) {
         btn.classList.add("active");
         selectedCPL.add(btn.textContent);
       } else {
@@ -271,11 +370,13 @@ function loadTemplate(event) {
       }
     });
 
-    updateAssessmentTable(); // Clear assessment rows
-    for (let i = 3; i < lines.length; i++) {
+    // Fill assessment rows
+    updateAssessmentTable(); // Clear table
+    for (let i = 4; i < lines.length; i++) {
       const [cpmk, tipe, deskripsi, persentase, maksimal, cpl, pi] = lines[i];
-      addAssessmentRow(); // Create a new row
-      const row = document.querySelectorAll(".assessment-row")[i - 3];
+      if (!cpmk) continue; // skip empty rows
+      addAssessmentRow();
+      const row = document.querySelectorAll(".assessment-row")[i - 4];
       const selects = row.querySelectorAll("select");
       const inputs = row.querySelectorAll("input");
 
@@ -562,8 +663,14 @@ function generateCPMKPortfolio() {
     `;
     document.getElementById('cplPerformance').innerHTML = cplTableHtml;
     window.cplTableHtml = cplTableHtml;
+    
+    const CPL_MAP = {
+      S1: ['a','b','c','d','e','f','g','h','i','j','k'],
+      S2: ['a','b','c','d','e','f','g','h'],
+      S3: ['a','b','c','d','e','f','g','h']
+    };
 
-    const allCPLs = ['a','b','c','d','e','f','g','h','i','j','k'];
+    const allCPLs = CPL_MAP[selectedJenjang] || [];
     const cplChartData = allCPLs.map(cpl => ({
       label: `CPL ${cpl}`,
       capaian: usedCPLChartData[cpl] || 0
@@ -626,20 +733,42 @@ function generateCPMKPortfolio() {
     });
 
     // Step 6: Generate PI Portfolio
-    const allPIs = [
-      "a1", "a2", "a3",
-      "b1", "b2", "b3", "b4",
-      "c1", "c2", "c3", "c4", "c5",
-      "d1", "d2", "d3",
-      "e1", "e2", "e3", "e4",
-      "f1", "f2",
-      "g1", "g2", "g3", "g4", "g5",
-      "h1", "h2",
-      "i1", "i2",
-      "j1", "j2",
-      "k1", "k2", "k3", "k4"
-    ];
-
+    const PI_MAP = {
+      S1: [
+        "a1", "a2", "a3",
+        "b1", "b2", "b3", "b4",
+        "c1", "c2", "c3", "c4", "c5",
+        "d1", "d2", "d3",
+        "e1", "e2", "e3", "e4",
+        "f1", "f2",
+        "g1", "g2", "g3", "g4", "g5",
+        "h1", "h2",
+        "i1", "i2",
+        "j1", "j2",
+        "k1", "k2", "k3", "k4"
+      ],
+      S2: [
+        "a1", "a2", "a3",
+        "b1", "b2", "b3", "b4",
+        "c1", "c2", "c3",
+        "d1", "d2", "d3", "d4", "d5",
+        "e1", "e2",
+        "f1", "f2", "f3", "f4",
+        "g1", "g2", "g3", "g4", "g5",
+        "h1", "h2", "h3", "h4"
+      ],
+      S3: [
+        "a1", "a2", 
+        "b1", "b2", 
+        "c1", "c2", "c3",
+        "d1", "d2", "d3", "d4",
+        "e1", "e2", "e3", "e4",
+        "f1", "f2", "f3",
+        "g1", "g2", "g3", 
+        "h1", "h2", "h3", "h4"
+      ]
+    };
+    const allPIs = PI_MAP[selectedJenjang] || [];
     const piMap = {}; 
 
     rows.forEach(row => {
@@ -787,6 +916,7 @@ async function sendToSheet() {
   }
 
   const payload = {
+    "jenjang": selectedJenjang,
     "Nama Mata Kuliah": mkName,
     "Kelas": kelas,
     "Tahun": tahun,
@@ -801,7 +931,7 @@ async function sendToSheet() {
 
   try {
     const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbwuHgayBDBz3NJmsh31duodYksNJSP0F_wWaKwMfyIVDe3O_Kb6AVTHoF4ikSly1WBOZQ/exec",
+      "https://script.google.com/macros/s/AKfycbyspyd3xsVS_gAcYx1nOCydU2zy3FLTsVR2CxTf2TBGQ_h0j99mRdWr5lANB5DB2EAXrQ/exec",
       {
         method: "POST",
         body: formData
@@ -888,9 +1018,10 @@ async function sendMahasiswaNilai() {
     for (const student of studentData) {
       const formData = new FormData();
       formData.append("data", JSON.stringify(student));
+      formData.append("jenjang", selectedJenjang); // send separately
 
       try {
-        const response = await fetch("https://script.google.com/macros/s/AKfycbwpIhkQlRcUBohuuMokKuW3y0wgJ7WaJH_TVP963D3-R2Jb_gbygE_oJU9nv7ARytc/exec", {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbxlObpWekTF63ZneGh0v4d7l21IktTosmP5huayTZG8kuhzTsHoIIPaPV9uWv904TAo/exec", {
           method: "POST",
           body: formData
         });
@@ -911,26 +1042,70 @@ async function sendMahasiswaNilai() {
   reader.readAsText(file);
 }
 
+// helpers to get ordered keys for a jenjang
+function getCPLKeysForJenjang(jenjang) {
+  const j = (jenjang && jenjangCPLData[jenjang]) ? jenjang : 'S1';
+  return (jenjangCPLData[j].cplList || []).slice();
+}
+
+function getPIKeysForJenjang(jenjang) {
+  const j = (jenjang && jenjangCPLData[jenjang]) ? jenjang : 'S1';
+  const keys = [];
+  (jenjangCPLData[j].cplList || []).forEach(cpl => {
+    const pis = jenjangCPLData[j].piMap[cpl] || [];
+    pis.forEach(p => { if (!keys.includes(p)) keys.push(p); });
+  });
+  return keys;
+}
+
+// Case-insensitive row lookup helper
+function getRowValueCaseInsensitive(row, key) {
+  if (row == null) return "";
+  // direct exact match
+  if (row.hasOwnProperty(key)) return row[key];
+  const lower = String(key).trim().toLowerCase();
+  for (const k of Object.keys(row)) {
+    if (String(k).trim().toLowerCase() === lower) return row[k];
+  }
+  return "";
+}
+
+// If jenjang not passed, fallback to the dropdown value in Rekap tab
+function normalizeJenjangParam(jenjang) {
+  if (jenjang && jenjangCPLData[jenjang]) return jenjang;
+  const el = document.getElementById("filterJenjangRekap");
+  if (el && el.value && jenjangCPLData[el.value]) return el.value;
+  return 'S1';
+}
+
 // Load rekap data from Google Sheets
-async function filterRekapByYear() {
+async function filterRekapByJenjangYear() {
+  const selectedJenjang = document.getElementById("filterJenjangRekap").value;
   const selectedYear = document.getElementById("filterYear").value;
   document.getElementById("loadingOverlay").style.display = "flex";
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbzAKL2_QaqkkDiFx27eEUQWQgrZ6FCY6y7zbeLUkUpWON3NyrcrP7G06ESeaO4l_okl/exec');
-    const data = await response.json();
-    if (!Array.isArray(data) || data.length === 0) throw new Error("Data kosong atau salah format");
-
-    // Filter by Tahun prefix: matches "2024-1" or "2024-2"
-    const filteredRows = data.filter(row => String(row.Tahun || '').startsWith(selectedYear));
-
-    if (filteredRows.length === 0) {
-      alert(`Tidak ditemukan data untuk tahun ${selectedYear}`);
+    // call GAS with jenjang param so GAS returns the correct sheet data
+    const resp = await fetch(
+      `https://script.google.com/macros/s/AKfycby7dUI5Gae0ypEQorj4e9PEzbODkH5EBwAdQLi0pHbfitSCpKVxjuHf4QH6UyugEYSh/exec?jenjang=${encodeURIComponent(selectedJenjang)}`
+    );
+    const data = await resp.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      alert("Data kosong atau salah format");
       document.getElementById("rekapContent").style.display = "none";
       return;
     }
 
-    processAndDisplayRekap(filteredRows);
+    // Filter by Tahun (prefix match, e.g., "2024-1" / "2024-2")
+    const filteredRows = data.filter(row => String(row.Tahun || '').startsWith(selectedYear));
+
+    if (filteredRows.length === 0) {
+      alert(`Tidak ditemukan data untuk jenjang ${selectedJenjang} tahun ${selectedYear}`);
+      document.getElementById("rekapContent").style.display = "none";
+      return;
+    }
+
+    processAndDisplayRekap(filteredRows, selectedJenjang);
     document.getElementById("rekapContent").style.display = "block";
 
   } catch (err) {
@@ -941,9 +1116,12 @@ async function filterRekapByYear() {
   }
 }
 
-function processAndDisplayRekap(rows) {
-  const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
-  const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5', 'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5', 'h1', 'h2', 'i1', 'i2', 'j1', 'j2','k1', 'k2', 'k3', 'k4'];
+// === main processor (jenjang-aware) ===
+function processAndDisplayRekap(rows, jenjang) {
+  jenjang = normalizeJenjangParam(jenjang);
+
+  const cplKeys = getCPLKeysForJenjang(jenjang);
+  const piKeys = getPIKeysForJenjang(jenjang);
 
   const cplSums = {}, cplCounts = {};
   cplKeys.forEach(k => { cplSums[k] = 0; cplCounts[k] = 0; });
@@ -952,46 +1130,42 @@ function processAndDisplayRekap(rows) {
   piKeys.forEach(k => { piSums[k] = 0; piCounts[k] = 0; });
 
   rows.forEach(row => {
-    Object.entries(row).forEach(([h, val]) => {
-      const num = parseFloat(val);
+    cplKeys.forEach(k => {
+      const raw = getRowValueCaseInsensitive(row, k);
+      const num = parseFloat(raw);
       if (!isNaN(num)) {
-        if (cplKeys.includes(h)) {
-          cplSums[h] += num;
-          cplCounts[h]++;
-        } else if (piKeys.includes(h)) {
-          piSums[h] += num;
-          piCounts[h]++;
-        }
+        cplSums[k] += num;
+        cplCounts[k] += 1;
+      }
+    });
+    piKeys.forEach(k => {
+      const raw = getRowValueCaseInsensitive(row, k);
+      const num = parseFloat(raw);
+      if (!isNaN(num)) {
+        piSums[k] += num;
+        piCounts[k] += 1;
       }
     });
   });
 
-  const avgCPL = cplKeys.map(k => ({
-    label: k.toUpperCase(),
-    value: cplCounts[k] ? (cplSums[k] / cplCounts[k]) : 0
-  }));
+  const avgCPL = cplKeys.map(k => cplCounts[k] ? (cplSums[k] / cplCounts[k]) : 0);
+  const avgPI  = piKeys.map(k => piCounts[k] ? (piSums[k] / piCounts[k]) : 0);
 
-  const avgPI = piKeys.map(k => ({
-    label: k.toLowerCase(),
-    value: piCounts[k] ? (piSums[k] / piCounts[k]) : 0
-  }));
+  drawCPLRadarChart(cplKeys.map((k, i) => ({ label: k.toUpperCase(), value: avgCPL[i] })));
+  drawPIBarChart(piKeys.map((k, i) => ({ label: k.toLowerCase(), value: avgPI[i] })));
 
-  drawCPLRadarChart(avgCPL);
-  drawPIBarChart(avgPI);
-  renderCPLTable(rows, 'cplTableContainer');
-  renderPITable(rows, 'piTableContainer');
+  renderCPLTable(rows, 'cplTableContainer', jenjang, avgCPL);
+  renderPITable(rows, 'piTableContainer', jenjang, avgPI);
 }
 
-// Draw rekap data
+// === charts (small numeric fixes so Chart.js receives numbers) ===
 function drawCPLRadarChart(avgData) {
   const soLabels = avgData.map(d => `CPL ${d.label}`);
-  const soValues = avgData.map(d => d.value.toFixed(2));
+  const soValues = avgData.map(d => Number(Number(d.value || 0).toFixed(2)));
   const thresholdSO = Array(avgData.length).fill(70);
 
   const ctx = document.getElementById('soRadarChart').getContext('2d');
-  if (window.soRadarChart instanceof Chart) {
-    window.soRadarChart.destroy();
-  }
+  if (window.soRadarChart instanceof Chart) window.soRadarChart.destroy();
 
   window.soRadarChart = new Chart(ctx, {
     type: 'radar',
@@ -999,20 +1173,20 @@ function drawCPLRadarChart(avgData) {
       labels: soLabels,
       datasets: [
         {
-          label: 'Nilai CPL',
-          data: soValues,
-          backgroundColor: 'rgba(21, 101, 192, 0.2)',
-          borderColor: '#1565c0',
-          pointBackgroundColor: '#1565c0',
-          fill: true
-        },
-        {
           label: 'Standar (70)',
           data: thresholdSO,
           borderColor: 'rgba(255, 193, 7, 1)',
           borderDash: [4, 4],
           pointRadius: 0,
           fill: false
+        },
+         {
+          label: 'Nilai CPL',
+          data: soValues,
+          backgroundColor: 'rgba(21, 101, 192, 0.2)',
+          borderColor: '#1565c0',
+          pointBackgroundColor: '#1565c0',
+          fill: true
         }
       ]
     },
@@ -1033,13 +1207,11 @@ function drawCPLRadarChart(avgData) {
 
 function drawPIBarChart(avgData) {
   const piLabels = avgData.map(d => d.label);
-  const piValues = avgData.map(d => d.value.toFixed(2));
+  const piValues = avgData.map(d => Number(Number(d.value || 0).toFixed(2)));
   const thresholdPI = Array(piLabels.length).fill(70);
 
   const ctx = document.getElementById('rekapPiChart').getContext('2d');
-  if (window.rekapPiChart instanceof Chart) {
-    window.rekapPiChart.destroy();
-  }
+  if (window.rekapPiChart instanceof Chart) window.rekapPiChart.destroy();
 
   window.rekapPiChart = new Chart(ctx, {
     type: 'bar',
@@ -1047,19 +1219,19 @@ function drawPIBarChart(avgData) {
       labels: piLabels,
       datasets: [
         {
-          label: 'Nilai PI',
-          data: piValues,
-          backgroundColor: '#2e7d32'
-        },
-        {
           label: 'Standar (70)',
           data: thresholdPI,
           borderColor: 'rgba(255, 193, 7, 1)',
           borderDash: [5, 5],
-          fill: false,  
+          fill: false,
           type: 'line',
           pointRadius: 0
-        }
+        },
+        {
+          label: 'Nilai PI',
+          data: piValues,
+          backgroundColor: '#2e7d32'
+        },
       ]
     },
     options: {
@@ -1079,31 +1251,84 @@ function drawPIBarChart(avgData) {
   });
 }
 
-function renderCPLTable(rows, containerId) {
-  const headers = ['Nama Mata Kuliah', 'Kelas', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
-  let html = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+// === tables (jenjang-aware) ===
+function renderCPLTable(rows, containerId, jenjang, avgCPL = []) {
+  jenjang = normalizeJenjangParam(jenjang);
+  const cplKeys = getCPLKeysForJenjang(jenjang);
+  const headers = ['Nama Mata Kuliah', 'Kelas', ...cplKeys];
+
+  let html = `
+    <div class="card mb-4">
+      <div class="card-header bg-success text-white fw-semibold">Capaian Profil Lulusan (CPL)</div>
+      <div class="card-body p-2">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-sm text-center align-middle">
+            <thead>
+              <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>`;
 
   rows.forEach(row => {
-    html += '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
+    html += '<tr>' + headers.map(h => {
+      if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
+        return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+      } else {
+        const v = getRowValueCaseInsensitive(row, h);
+        return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
+      }
+    }).join('') + '</tr>';
   });
 
-  html += '</tbody></table>';
+  html += '</tbody>';
+
+  // Add averages row
+  if (avgCPL.length) {
+    html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
+      avgCPL.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
+      '</tr></tfoot>';
+  }
+
+  html += `</table></div></div></div>`;
   document.getElementById(containerId).innerHTML = html;
 }
 
-function renderPITable(rows, containerId) {
-  const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
-    'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
-    'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'];
-
+function renderPITable(rows, containerId, jenjang, avgPI = []) {
+  jenjang = normalizeJenjangParam(jenjang);
+  const piKeys = getPIKeysForJenjang(jenjang);
   const headers = ['Nama Mata Kuliah', 'Kelas', ...piKeys];
-  let html = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+
+  let html = `
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white fw-semibold">Performance Indicator (PI)</div>
+      <div class="card-body p-2">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-sm text-center align-middle">
+            <thead>
+              <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>`;
 
   rows.forEach(row => {
-    html += '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
+    html += '<tr>' + headers.map(h => {
+      if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
+        return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+      } else {
+        const v = getRowValueCaseInsensitive(row, h);
+        return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
+      }
+    }).join('') + '</tr>';
   });
 
-  html += '</tbody></table>';
+  html += '</tbody>';
+
+  // Add averages row
+  if (avgPI.length) {
+    html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
+      avgPI.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
+      '</tr></tfoot>';
+  }
+
+  html += `</table></div></div></div>`;
   document.getElementById(containerId).innerHTML = html;
 }
 
@@ -1118,16 +1343,30 @@ async function generateAndDownloadFullPortfolio() {
     return;
   }
 
-  const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaZTwa9BXIuayN_5G2IVfoIbSWSJsac5zJ4ZH9FtZ4_GH3MAtlYcy7mqbT8RXm1JWbXA/exec';
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbx3xEuyZXJITWiYc-YwfOyo2O_PqUVf9dnywQcPYdHkfujFiEBvWUgiipbPAJ1DxzSTNw/exec';
+  const jenjangParam = encodeURIComponent(selectedJenjang || "");
 
   try {
     document.getElementById("loadingOverlay").style.display = "flex";
 
-    const response = await fetch(`${scriptUrl}?nama=${encodeURIComponent(mkName)}`);
+    // include jenjang param so Apps Script searches the correct folder
+    const response = await fetch(`${scriptUrl}?nama=${encodeURIComponent(mkName)}&jenjang=${jenjangParam}`);
     const result = await response.json();
 
-    if (result.status === "NOT_FOUND") {
-      alert("Template Portofolio belum tersedia. RPKPS yang digunakan masih format lama. Silahkan ganti pada format baru dan sampaikan ke Mas Calvin/ Pak Cecep untuk mengupdate di database. Terima kasih.");
+    if (!result || result.status === "NOT_FOUND") {
+      alert("Template Portofolio belum tersedia di folder jenjang yang dipilih. Pastikan template ada di folder S1/S2/S3 sesuai jenjang, atau hubungi admin untuk meng-upload template.");
+      return;
+    }
+
+    if (result.status === "ERROR") {
+      console.error("Apps Script error:", result.message);
+      alert("Terjadi kesalahan pada server saat mencari template.");
+      return;
+    }
+
+    // result should contain at least: name and base64
+    if (!result.base64) {
+      alert("Template ditemukan tetapi tidak dapat diunduh (tidak ada data).");
       return;
     }
 
@@ -1163,7 +1402,7 @@ async function generateAndDownloadFullPortfolio() {
       })
     });
 
-    // Prepare data to inject into placeholders
+    // Prepare data to inject into placeholders (your existing code)
     const tableRows = [];
     const headers = ["CPMK", "Tipe", "Deskripsi", "Persentase", "Nilai Maksimal", "CPL", "PI"];
 
@@ -1177,7 +1416,7 @@ async function generateAndDownloadFullPortfolio() {
       tableRows.push(rowObj);
     });
 
-    // Generate HTML table string
+    // Generate plain table strings (your existing code)
     let plainTable = "CPMK\tTipe\tDeskripsi\tPersentase\tNilai Maksimal\tCPL\tPI\n";
     let plainCPMK = "CPMK\tPersentase\tStandar\tPerformance\tEvaluasi\n";
     let plainCPL = "CPL\tPerformance\n";
@@ -1226,9 +1465,9 @@ async function generateAndDownloadFullPortfolio() {
       mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     });
 
-    const originalName = result.name.replace(/\.[^/.]+$/, "");
+    const originalName = (result.name || '').replace(/\.[^/.]+$/, "");
     const finalName = `Portofolio ${originalName} - ${kelas}.docx`;
-    
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(out);
     link.download = finalName;
@@ -1245,24 +1484,24 @@ async function generateAndDownloadFullPortfolio() {
 // Function to load student portofolio
 async function loadStudentPortfolio() {
   const nimInput = document.getElementById("searchNIM").value.trim();
+  const jenjang = document.getElementById("jenjangSelect").value;
   if (!nimInput) return;
 
   try {
     document.getElementById("loadingOverlay").style.display = "flex";
 
-    // Fetch data directly for the selected NIM only
+    // Fetch from GAS with jenjang & nim
     let studentRows = [];
     try {
-      const response = await fetch("https://script.google.com/macros/s/AKfycbxgaO9USl8PjDnBE6ZuvZCUTWrUY__gXR9KI73dmw46viBufV4SA_81arGQQb0TWWLx/exec");
+      const url = `https://script.google.com/macros/s/AKfycbyHjzC1MI1fWdWDv1BzPdaRNnvT1VfhP_Dj24PT5af66X6xcu91j8564jNHTUTHvI4_ew/exec?jenjang=${encodeURIComponent(jenjang)}&nim=${encodeURIComponent(nimInput)}`;
+      const response = await fetch(url);
       const allData = await response.json();
-      studentRows = allData.filter(row => String(row.NIM).trim() === nimInput);
+      studentRows = allData;
     } catch (error) {
       console.error("Gagal memuat data mahasiswa:", error);
       document.getElementById("studentCourses").innerHTML = `<p style="color:red;">Gagal memuat data mahasiswa.</p>`;
       return;
     }
-
-    // const studentRows = allMahasiswaData.filter(row => String(row.NIM).trim() === nimInput);
 
     if (studentRows.length === 0) {
       document.getElementById("studentCourses").innerHTML = `<p>Tidak ditemukan data untuk NIM: ${nimInput}</p>`;
@@ -1285,15 +1524,8 @@ async function loadStudentPortfolio() {
     html += `</ul>`;
     document.getElementById("studentCourses").innerHTML = html;
 
-    // 3. Draw horizontal PI table
-    renderPITable(studentRows, "studentPiTable");
-
-    // 4. Draw PI bar chart with threshold
-    const piKeys = [
-      'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
-      'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
-      'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'
-    ];
+    // 3. Use jenjang-specific PI keys
+    const piKeys = getPIKeysForJenjang(jenjang);
 
     const avgPI = {};
     const countPI = {};
@@ -1314,19 +1546,63 @@ async function loadStudentPortfolio() {
 
     drawStudentPIChart(avgData);
 
-    const cplData = calculateCPLFromPI(studentRows);
-    drawStudentCPLRadarChart(cplData);
+    // Render PI table below PI chart
+    const piTableRows = studentRows.map(row => {
+      const piData = {};
+      piKeys.forEach(key => {
+        const raw = row[key];
+        const val = parseFloat(raw);
+        piData[key] = (!isNaN(val) && raw !== '') ? val.toFixed(2) : '';
+      });
 
-    const cplRow = { "Nama Mata Kuliah": "Rata-rata", "Kelas": "-" };
-    cplData.forEach(cpl => {
-      cplRow[cpl.label] = cpl.value.toFixed(2);
+      return {
+        "Nama Mata Kuliah": row["Nama Mata Kuliah"],
+        "Kelas": row.Kelas,
+        ...piData
+      };
     });
-    renderCPLTable([cplRow], "studentCPLTable");
+
+    // Append average row at the end
+    const piAvgRow = {
+      "Nama Mata Kuliah": "Rata-rata",
+      "Kelas": "-"
+    };
+    avgData.forEach(item => {
+      piAvgRow[item.label] = !isNaN(item.value) ? item.value.toFixed(2) : '';
+    });
+    piTableRows.push(piAvgRow);
+
+    // === Render PI Table ===
+    renderPIMHSTable(piTableRows, "studentPiTable", piKeys);
+
+    // 4. Use jenjang-specific CPL
+    const cplRows = studentRows.map(row => {
+      const cplValues = calculateCPLFromPI([row], jenjang); // per MK
+      const rowData = { "Nama Mata Kuliah": row["Nama Mata Kuliah"], "Kelas": row["Kelas"] };
+      cplValues.forEach(cpl => {
+        rowData[cpl.label] = cpl.value.toFixed(2);
+      });
+      return rowData;
+    });
+
+    // Add average row at the end (optional)
+    const avgCPLRow = { "Nama Mata Kuliah": "Rata-rata", "Kelas": "-" };
+    calculateCPLFromPI(studentRows, jenjang).forEach(cpl => {
+      avgCPLRow[cpl.label] = cpl.value.toFixed(2);
+    });
+    cplRows.push(avgCPLRow);
+
+    // Draw CPL radar chart (average)
+    drawStudentCPLRadarChart(calculateCPLFromPI(studentRows, jenjang));
+
+    // Render CPL table
+    const cplKeys = getCPLKeysForJenjang(jenjang);
+    renderCPLMHSTable(cplRows, "studentCPLTable", cplKeys);
+
   } catch (error) {
     console.error("Gagal memuat data mahasiswa:", error);
     document.getElementById("studentCourses").innerHTML = `<p style="color:red;">Gagal memuat data mahasiswa.</p>`;
   } finally {
-    // Hide loading spinner
     document.getElementById("loadingOverlay").style.display = "none";
   }
 }
@@ -1347,20 +1623,20 @@ function drawStudentCPLRadarChart(avgData) {
       labels: soLabels,
       datasets: [
         {
-          label: 'Nilai CPL',
-          data: soValues,
-          backgroundColor: 'rgba(21, 101, 192, 0.2)',
-          borderColor: '#1565c0',
-          pointBackgroundColor: '#1565c0',
-          fill: true
-        },
-        {
           label: 'Standar (70)',
           data: thresholdSO,
           borderColor: 'rgba(255, 193, 7, 1)',
           borderDash: [4, 4],
           pointRadius: 0,
           fill: false
+        },
+        {
+          label: 'Nilai CPL',
+          data: soValues,
+          backgroundColor: 'rgba(21, 101, 192, 0.2)',
+          borderColor: '#1565c0',
+          pointBackgroundColor: '#1565c0',
+          fill: true
         }
       ]
     },
@@ -1379,69 +1655,6 @@ function drawStudentCPLRadarChart(avgData) {
   });
 }
 
-function renderCPLTable(rows, containerId) {
-  const cplKeys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
-  const headers = ['Nama Mata Kuliah', 'Kelas', ...cplKeys];
-
-  let html = '<table border="1" cellpadding="6"><thead><tr>' +
-             headers.map(h => `<th>${h}</th>`).join('') +
-             '</tr></thead><tbody>';
-
-  // Table rows per course
-  rows.forEach(row => {
-    html += '<tr>' +
-            headers.map(h => `<td>${row[h] || ''}</td>`).join('') +
-            '</tr>';
-  });
-
-  html += '</tbody></table>';
-
-  document.getElementById(containerId).innerHTML = html;
-}
-
-function renderPITable(rows, containerId) {
-  const piKeys = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4', 'c5',
-    'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'e4', 'f1', 'f2', 'g1', 'g2', 'g3', 'g4', 'g5',
-    'h1', 'h2', 'i1', 'i2', 'j1', 'j2', 'k1', 'k2', 'k3', 'k4'];
-
-  const headers = ['Nama Mata Kuliah', 'Kelas', ...piKeys];
-  let html = '<table border="1" cellpadding="6"><thead><tr>' +
-             headers.map(h => `<th>${h}</th>`).join('') +
-             '</tr></thead><tbody>';
-
-  // Table rows per course
-  rows.forEach(row => {
-    html += '<tr>' +
-            headers.map(h => `<td>${row[h] || ''}</td>`).join('') +
-            '</tr>';
-  });
-
-  // Compute averages
-  const piSums = {}, piCounts = {};
-  piKeys.forEach(key => { piSums[key] = 0; piCounts[key] = 0; });
-
-  rows.forEach(row => {
-    piKeys.forEach(key => {
-      const val = parseFloat(row[key]);
-      if (!isNaN(val)) {
-        piSums[key] += val;
-        piCounts[key]++;
-      }
-    });
-  });
-
-  const avgRow = ['<strong>Rata-rata</strong>', ''];
-  piKeys.forEach(key => {
-    const avg = piCounts[key] > 0 ? (piSums[key] / piCounts[key]).toFixed(2) : '';
-    avgRow.push(`<strong>${avg}</strong>`);
-  });
-
-  html += '<tr>' + avgRow.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
-  html += '</tbody></table>';
-
-  document.getElementById(containerId).innerHTML = html;
-}
-
 function drawStudentPIChart(avgData) {
   const labels = avgData.map(d => d.label);
   const values = avgData.map(d => d.value.toFixed(2));
@@ -1458,11 +1671,6 @@ function drawStudentPIChart(avgData) {
       labels: labels,
       datasets: [
         {
-          label: 'Nilai PI',
-          data: values,
-          backgroundColor: '#3f51b5'
-        },
-        {
           label: 'Standar (70)',
           data: threshold,
           type: 'line',
@@ -1470,7 +1678,12 @@ function drawStudentPIChart(avgData) {
           borderDash: [5, 5],
           fill: false,
           pointRadius: 0
-        }
+        },
+        {
+          label: 'Nilai PI',
+          data: values,
+          backgroundColor: '#3f51b5'
+        },
       ]
     },
     options: {
@@ -1493,20 +1706,9 @@ function drawStudentPIChart(avgData) {
   });
 }
 
-function calculateCPLFromPI(studentRows) {
-  const piToCplMap = {
-    a: ['a1', 'a2', 'a3'],
-    b: ['b1', 'b2', 'b3', 'b4'],
-    c: ['c1', 'c2', 'c3', 'c4', 'c5'],
-    d: ['d1', 'd2', 'd3'],
-    e: ['e1', 'e2', 'e3', 'e4'],
-    f: ['f1', 'f2'],
-    g: ['g1', 'g2', 'g3', 'g4', 'g5'],
-    h: ['h1', 'h2'],
-    i: ['i1', 'i2'],
-    j: ['j1', 'j2'],
-    k: ['k1', 'k2', 'k3', 'k4']
-  };
+function calculateCPLFromPI(studentRows, jenjang) {
+  const piToCplMap = jenjangCPLData[jenjang]?.piMap;
+  if (!piToCplMap) return [];
 
   const cplSums = {}, cplCounts = {};
   Object.keys(piToCplMap).forEach(cpl => {
@@ -1535,49 +1737,158 @@ function calculateCPLFromPI(studentRows) {
 // Load and filter mahasiswa data for NIM suggestions
 let mahasiswaList = [];
 
-fetch('Daftar_MHS.csv')
-  .then(response => response.text())
-  .then(csvText => {
-    const parsed = Papa.parse(csvText, {
-      header: true,
-      skipEmptyLines: true
-    });
-    mahasiswaList = parsed.data;
-  });
+// Load mahasiswa list based on selected jenjang
+function loadMahasiswaList() {
+    const jenjang = document.getElementById("jenjangSelect").value;
+    mahasiswaList = []; // reset
 
+    if (!jenjang) {
+        console.warn("Pilih jenjang terlebih dahulu.");
+        return;
+    }
+
+    let fileName = "";
+    if (jenjang === "S1") fileName = "Daftar_MHS.csv";
+    else if (jenjang === "S2") fileName = "Daftar_MHS_S2.csv";
+    else if (jenjang === "S3") fileName = "Daftar_MHS_S3.csv";
+
+    fetch(fileName)
+        .then(response => response.text())
+        .then(csvText => {
+            const parsed = Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true
+            });
+            mahasiswaList = parsed.data;
+        })
+        .catch(err => console.error("Gagal memuat daftar mahasiswa:", err));
+}
+
+// Filter mahasiswa suggestions
 function filterMahasiswa() {
-  const input = document.getElementById('searchNIM').value.toLowerCase();
-  const suggestionBox = document.getElementById('nimSuggestions');
-  suggestionBox.innerHTML = '';
+    const input = document.getElementById('searchNIM').value.toLowerCase();
+    const suggestionBox = document.getElementById('nimSuggestions');
+    suggestionBox.innerHTML = '';
 
-  if (!input) {
-    suggestionBox.style.display = 'none';
+    if (!input || mahasiswaList.length === 0) {
+        suggestionBox.style.display = 'none';
+        return;
+    }
+
+    const matched = mahasiswaList
+        .filter(m => m.NIM.toLowerCase().includes(input) || m.Nama.toLowerCase().includes(input))
+        .slice(0, 10);
+
+    matched.forEach(m => {
+        const div = document.createElement('div');
+        div.textContent = `${m.NIM} - ${m.Nama}`;
+        div.className = 'suggestion-item';
+        div.onclick = () => {
+            document.getElementById('searchNIM').value = m.NIM;
+            suggestionBox.innerHTML = '';
+            suggestionBox.style.display = 'none';
+        };
+        suggestionBox.appendChild(div);
+    });
+
+    suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
+}
+
+function renderCPLMHSTable(rows, containerId, cplKeys) {
+  if (!rows || rows.length === 0) {
+    document.getElementById(containerId).innerHTML = "<p>Tidak ada data CPL.</p>";
     return;
   }
 
-  const matched = mahasiswaList
-    .filter(m => m.NIM.toLowerCase().includes(input) || m.Nama.toLowerCase().includes(input))
-    .slice(0, 10);
+  let html = `
+    <div class="card mb-4">
+      <div class="card-header bg-success text-white fw-semibold">Capaian Profil Lulusan (CPL)</div>
+      <div class="card-body p-2">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-sm text-center align-middle">
+            <thead>
+              <tr>
+                <th class="text-nowrap">Nama Mata Kuliah</th>
+                <th class="text-nowrap">Kelas</th>`;
 
-  matched.forEach(m => {
-    const div = document.createElement('div');
-    div.textContent = `${m.NIM} - ${m.Nama}`;
-    div.className = 'suggestion-item';
-    div.onclick = () => {
-      document.getElementById('searchNIM').value = m.NIM;
-      suggestionBox.innerHTML = '';
-      suggestionBox.style.display = 'none';
-    };
-    suggestionBox.appendChild(div);
+  cplKeys.forEach(key => {
+    html += `<th>${key}</th>`;
   });
 
-  suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
+  html += `
+              </tr>
+            </thead>
+            <tbody>`;
+
+  rows.forEach(row => {
+    html += `<tr><td>${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
+    cplKeys.forEach(key => {
+      const val = row[key];
+      html += `<td>${(val !== undefined && val !== null && val !== '' && !isNaN(val)) ? Number(val).toFixed(2) : ''}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function renderPIMHSTable(rows, containerId, piKeys) {
+  if (!rows || rows.length === 0) {
+    document.getElementById(containerId).innerHTML = "<p>Tidak ada data PI.</p>";
+    return;
+  }
+
+  let html = `
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white fw-semibold">Performance Indicator (PI)</div>
+      <div class="card-body p-2">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-sm text-center align-middle">
+            <thead>
+              <tr>
+                <th class="text-nowrap">Nama Mata Kuliah</th>
+                <th class="text-nowrap">Kelas</th>`;
+
+  piKeys.forEach(key => {
+    html += `<th>${key}</th>`;
+  });
+
+  html += `
+              </tr>
+            </thead>
+            <tbody>`;
+
+  rows.forEach(row => {
+    html += `<tr><td>${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
+    piKeys.forEach(key => {
+      const val = row[key];
+      html += `<td>${(val !== undefined && val !== null && val !== '' && !isNaN(val)) ? Number(val).toFixed(2) : ''}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById(containerId).innerHTML = html;
 }
 
 // Load and visualize time series CPL Prodi
 async function loadTimeProdiPortfolio() {
   const tahunAwal = document.getElementById("tahunAwalProdi").value;
   const tahunAkhir = document.getElementById("tahunAkhirProdi").value;
+  const jenjang = document.getElementById("filterJenjangTimeSeries").value;
   const container = document.getElementById("prodiChartContainer");
   container.innerHTML = "";
 
@@ -1589,8 +1900,10 @@ async function loadTimeProdiPortfolio() {
   document.getElementById("loadingOverlay").style.display = "flex";
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbzAKL2_QaqkkDiFx27eEUQWQgrZ6FCY6y7zbeLUkUpWON3NyrcrP7G06ESeaO4l_okl/exec');
+    const url = `https://script.google.com/macros/s/AKfycby7dUI5Gae0ypEQorj4e9PEzbODkH5EBwAdQLi0pHbfitSCpKVxjuHf4QH6UyugEYSh/exec?jenjang=${encodeURIComponent(jenjang)}`;
+    const response = await fetch(url);
     const data = await response.json();
+
     if (!Array.isArray(data) || data.length === 0) throw new Error("Data kosong atau salah format");
 
     const allYears = [];
@@ -1598,8 +1911,8 @@ async function loadTimeProdiPortfolio() {
       allYears.push(`${y}-1`, `${y}-2`);
     }
 
-    const yearGroups = {}; // { 2024: [rows from 2024-1 and 2024-2], ... }
-
+    // Group by year prefix (e.g., "2024" from "2024-1")
+    const yearGroups = {}; 
     data.forEach(row => {
       const tahun = String(row.Tahun || '').trim();
       const yearPrefix = tahun.split('-')[0];
@@ -1611,7 +1924,7 @@ async function loadTimeProdiPortfolio() {
     });
 
     const datasets = [];
-    const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
+    const cplKeys = getCPLKeysForJenjang(jenjang);
 
     Object.entries(yearGroups).forEach(([year, rows]) => {
       const sums = {}, counts = {};
@@ -1720,22 +2033,32 @@ function filterMK_TS() {
   suggestionBox.style.display = matched.length > 0 ? 'block' : 'none';
 }
 
+function onJenjangMKChange() {
+  const jenjang = document.getElementById("jenjangMKTS").value;
+  selectedJenjang = jenjang;
+  loadMKList(jenjang); // This updates mkList[]
+  document.getElementById("pilihMKTS").value = '';
+  document.getElementById("mkSuggestionsTS").innerHTML = '';
+}
+
 async function loadTimeMKPortfolio() {
+  const jenjang = selectedJenjang;
   const mkInput = document.getElementById("pilihMKTS").value.trim();
   const tahunAwal = document.getElementById("tahunAwalMK").value;
   const tahunAkhir = document.getElementById("tahunAkhirMK").value;
   const container = document.getElementById("mkChartContainer");
   container.innerHTML = "";
 
-  if (!mkInput || !tahunAwal || !tahunAkhir || tahunAwal > tahunAkhir) {
-    alert("Mohon lengkapi semua input dengan benar.");
+  if (!jenjang || !mkInput || !tahunAwal || !tahunAkhir || tahunAwal > tahunAkhir) {
+    alert("Mohon lengkapi semua input dengan benar (Jenjang, MK, Tahun).");
     return;
   }
 
   document.getElementById("loadingOverlay").style.display = "flex";
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbzAKL2_QaqkkDiFx27eEUQWQgrZ6FCY6y7zbeLUkUpWON3NyrcrP7G06ESeaO4l_okl/exec');
+    const url = `https://script.google.com/macros/s/AKfycby7dUI5Gae0ypEQorj4e9PEzbODkH5EBwAdQLi0pHbfitSCpKVxjuHf4QH6UyugEYSh/exec?jenjang=${encodeURIComponent(jenjang)}`;
+    const response = await fetch(url);
     const data = await response.json();
     if (!Array.isArray(data) || data.length === 0) throw new Error("Data kosong atau salah format");
 
@@ -1744,7 +2067,7 @@ async function loadTimeMKPortfolio() {
       allYears.push(`${y}-1`, `${y}-2`);
     }
 
-    const cplKeys = ['a','b','c','d','e','f','g','h','i','j','k'];
+    const cplKeys = getCPLKeysForJenjang(jenjang);
     const datasets = [];
 
     allYears.forEach(yr => {

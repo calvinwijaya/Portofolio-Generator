@@ -1,0 +1,30 @@
+Desain dan Manajemen Informasi Geospasial
+Ekstraksi Informasi Citra
+Estimasi dan Analisis Data
+Filsafat Ilmu
+Fotogrametri Lanjut
+Geodesi Fisis Lanjut
+Infrastruktur Data Spasial
+Kartografi dan Geovisualisasi
+Komputasi Geospasial
+Manajemen Perbatasan
+Manajemen Pertanahan
+Metodologi Penelitian
+Pemetaan dengan Sensor Aktif
+Pemetaan Laut Lanjut
+Pemodelan dan Visualisasi 3D
+Pemodelan Deformasi dan Geodinamika
+Penetapan dan Penegasan Batas Darat
+Penetapan dan Penegasan Batas Laut
+Pengembangan Pertanahan
+Sains Data Geospasial
+Sistem Geosensor
+Sistem Informasi Geospasial
+Sistem Informasi Pertanahan
+Sistem Pengambilan Keputusan Berbasis Spasial
+Sistem Penginderaan Jauh
+Sistem Referensi dan Penentuan Posisi
+Survei Rekayasa Lanjut
+Teknologi Geospasial untuk Manajemen Bencana
+Tesis
+Web Geospasial

@@ -85,9 +85,23 @@ button {
 }
 
 .cpl-button.active {
-  background-color: #4CAF50;
+  background-color: #2196F3;
   color: white;
   font-weight: bold;
+}
+
+.jenjang-button {
+  padding: 5px 10px;
+  margin: 2px;
+  border: 1px solid #ccc;
+  background-color: #f4f4f4;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.jenjang-button.active {
+  background-color: #2196F3;
+  color: white;
 }
 
 #assessmentHeader {

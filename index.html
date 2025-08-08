@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.39.0/docxtemplater.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div id="sidebar">
@@ -37,10 +38,20 @@
             <p class="description">
                 Website ini ditujukan untuk memudahkan dosen Departemen Teknik Geodesi FT UGM dalam pembuatan Portofolio Mata Kuliah
             </p>
+
+            <div class="input-group">
+                <label>Jenjang:</label>
+                <div id="jenjangButtons" class="jenjang-buttons"></div>
+            </div>
+
             <p>
                 Link template RPKPS (New): <a href="https://drive.google.com/drive/folders/1ag3HJs5qA8oxGiXChU3iXuPaPKibbWd8?usp=sharing">Template RPKPS (New)</a><br>
-                Link RPKPS setiap mata kuliah: <a href="https://docs.google.com/spreadsheets/d/1k0fT4Xq_DxciS0LIzynbmjU6bwp4LM0V_L5bD917yBo/edit?usp=sharing">Basisdata RPKPS</a><br>
-                Link Peta Kurikulum: <a href="https://docs.google.com/spreadsheets/d/1bGLwJS37uzSJFAzyYarP0eGzbNK8EkoO/edit?usp=sharing&ouid=115539750102645325103&rtpof=true&sd=true">Peta Kurikulum</a>
+                Link RPKPS setiap mata kuliah: <a href="https://docs.google.com/spreadsheets/d/1k0fT4Xq_DxciS0LIzynbmjU6bwp4LM0V_L5bD917yBo/edit?usp=sharing">Basisdata RPKPS S1, </a>
+                                                <a href="https://drive.google.com/drive/folders/1nUy3L6JdNMv57Tpm9A3qr9oZbqHqm6Mp?usp=sharing">Basisdata RPKPS S2, </a>
+                                                <a href="https://drive.google.com/drive/folders/1r05RCeys3_6nMLxRDgdE9rWuWxN6_zRO?usp=sharing">Basisdata RPKPS S3</a><br>
+                Link Peta Kurikulum: <a href="https://docs.google.com/spreadsheets/d/1bGLwJS37uzSJFAzyYarP0eGzbNK8EkoO/edit?usp=sharing&ouid=115539750102645325103&rtpof=true&sd=true">Peta Kurikulum S1, </a>
+                                     <a href="https://docs.google.com/spreadsheets/d/1NtpGuMfTHzXUln1cxr8hoLKgS9-Q1R2H50FIWtidd5A/edit?usp=sharing">Peta Kurikulum S2, </a>
+                                     <a href="https://docs.google.com/spreadsheets/d/19BSaXlDpsPrpmhzuguTL2gmGxssqi6H_w7oy6Q60iog/edit?usp=sharing">Peta Kurikulum S3</a>       
             </p>
 
             <div class="input-group">
@@ -93,16 +104,6 @@
                 </div>
 
                 <div id="assessmentTable">
-                    <!-- <div id="assessmentHeader">
-                    <div>CPMK</div>
-                    <div>Tipe</div>
-                    <div>Deskripsi</div>
-                    <div>Persentase</div>
-                    <div>Nilai Maksimal</div>
-                    <div>CPL</div>
-                    <div>PI</div>
-                    </div> -->
-
                     <div id="assessmentRows"></div>
                     <p id="persentaseWarning"></p>
                 </div>
@@ -154,6 +155,15 @@
             <h2>Rekapitulasi Capaian Portofolio</h2>
 
             <div class="input-group">
+                <label for="filterJenjangRekap">Pilih Jenjang:</label>
+                <select id="filterJenjangRekap">
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                </select>
+            </div>
+
+            <div class="input-group">
                 <label for="filterYear">Pilih Tahun:</label>
                 <select id="filterYear">
                     <option value="2024">2024</option>
@@ -161,47 +171,62 @@
                     <!-- More options can be added here -->
                 </select>
             </div>
+
             <div class="input-group" style="align-self: flex-end;">
-                <button class="main-button" onclick="filterRekapByYear()">Show Portofolio</button>
+                <button class="main-button" onclick="filterRekapByJenjangYear()">Show Portofolio</button>
             </div>
 
             <div id="rekapContent" style="display:none;">
                 <h3>Rekapitulasi Capaian CPL</h3>
                 <canvas id="soRadarChart" width="400" height="400"></canvas>
                 <div id="cplTableContainer" class="table-container"></div>
-
+                </br> 
                 <h3>Rekapitulasi Capaian PI</h3>
                 <canvas id="rekapPiChart" width="800" height="400"></canvas>
                 <div id="piTableContainer" class="table-container"></div>
             </div>
-
-            <h3>CPL PI PSPSTGD</h3>
+            </br>   
+            <h3>CPL PI PSPSTGD, PMPSTGM, dan PDPSTGM</h3>
             <div style="overflow-x: auto; border: 1px solid #ccc; border-radius: 8px;">
-            <iframe 
-                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ65su3Ig9sNyZ3Sahsfn4ql3Rqg_cuMMg_ARpkEMPG5YNRwCTAPE-PIXp2Rrxg-nXSrtjM44pvodYJ/pubhtml?gid=707560582&single=true"
-                width="100%" 
-                height="600px" 
-                style="border: none; min-width: 1000px;">
-            </iframe>
+                <iframe 
+                    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ65su3Ig9sNyZ3Sahsfn4ql3Rqg_cuMMg_ARpkEMPG5YNRwCTAPE-PIXp2Rrxg-nXSrtjM44pvodYJ/pubhtml"
+                    width="100%" 
+                    height="600px" 
+                    style="border: none; min-width: 1000px;">
+                </iframe>
             </div>
         </div>
 
         <div id="mahasiswaTab" class="tab-content">
             <h2>Portofolio Mahasiswa</h2>
+
+            <!-- Jenjang Selector -->
             <div class="input-group">
-            <label for="searchNIM"><strong>Cari Mahasiswa (NIM):</strong></label>
-            <div class="search-container">
-                <input type="text" id="searchNIM" placeholder="Cari NIM mahasiswa..." oninput="filterMahasiswa()" autocomplete="off">
-                <span class="search-icon">🔍</span>
-                <div id="nimSuggestions" class="suggestions-box"></div>
+                <label for="jenjangSelect">Pilih Jenjang:</label>
+                <select id="jenjangSelect" onchange="loadMahasiswaList()">
+                    <option value="">-- Pilih Jenjang --</option>
+                    <option value="S1">Sarjana (S1)</option>
+                    <option value="S2">Magister (S2)</option>
+                    <option value="S3">Doktor (S3)</option>
+                </select>
             </div>
-            <button class="main-button" onclick="loadStudentPortfolio()">Tampilkan Portofolio</button>
+
+            <!-- Search Mahasiswa -->
+            <div class="input-group">
+                <label for="searchNIM">Cari Mahasiswa (NIM):</label>
+                <div class="search-container">
+                    <input type="text" id="searchNIM" placeholder="Cari NIM mahasiswa..." oninput="filterMahasiswa()" autocomplete="off">
+                    <span class="search-icon">🔍</span>
+                    <div id="nimSuggestions" class="suggestions-box"></div>
+                </div>
+                <button class="main-button" onclick="loadStudentPortfolio()">Tampilkan Portofolio</button>
             </div>
 
             <div id="studentCourses"></div>
             <h3>Nilai CPL</h3>
             <canvas id="studentCPLChart" style="max-width: 100%; margin-top: 30px;"></canvas>
             <div id="studentCPLTable" style="margin-top: 20px;"></div>
+
             <h3>Nilai PI</h3>
             <canvas id="studentPiChart" style="max-width: 100%; margin-top: 30px;"></canvas>
             <div id="studentPiTable" style="margin-top: 20px;"></div>
@@ -210,6 +235,16 @@
         <!-- Time Series - Prodi -->
         <div id="timeprodiTab" class="tab-content">
             <h2>Time-Series CPL Prodi</h2>
+
+            <div class="input-group">
+                <label for="filterJenjangTimeSeries">Pilih Jenjang:</label>
+                <select id="filterJenjangTimeSeries">
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                </select>
+            </div>
+
             <div class="input-row">
                 <div class="input-group">
                 <label for="tahunAwalProdi">Dari Tahun:</label>
@@ -234,6 +269,16 @@
         <!-- Time Series - Mata Kuliah -->
         <div id="timemkTab" class="tab-content">
             <h2>Time-Series CPL Mata Kuliah</h2>
+
+            <div class="input-group">
+                <label for="jenjangMKTS"><strong>Pilih Jenjang:</strong></label>
+                <select id="jenjangMKTS" onchange="onJenjangMKChange()">
+                    <option value="">--Pilih Jenjang--</option>
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                </select>
+            </div>
 
             <div class="input-group">
                 <label for="pilihMKTS"><strong>Pilih Mata Kuliah:</strong></label>

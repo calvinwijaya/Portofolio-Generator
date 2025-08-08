@@ -1,0 +1,100 @@
+Administrasi Pertanahan
+Aljabar Linear
+Analisis Citra Penginderaan Jauh
+Analisis Geospasial
+Analisis Statistika
+Aplikasi Fotogrametri Jarak Dekat
+Basis Data Spasial
+Dasar Geosensor
+Dasar-dasar Geofisika dan Astronomi
+Fisika Dasar
+Fotogrametri Dasar
+Geodesi Fisis
+Geodesi Satelit
+Geometri Analitik
+Geometri Diferensial
+GNSS Terapan
+Grafika Komputer dan Visualisasi
+Hitung Perataan
+Hitung Perataan Terapan
+Hukum Agraria
+Hukum Laut
+Industri Geospasial
+Infrastruktur Informasi Geospasial
+Jaring Kontrol Geodesi
+Kalkulus
+Kartografi
+Kemah Kerja
+Kerja Praktik
+Konsep Keteknikan Untuk Peradaban
+Kuliah Kerja Nyata
+Manajemen dan Kepemimpinan
+Manajemen dan Kewirausahaan
+Matematika Diskrit
+Metodologi Penelitian
+Mitigasi dan Manajemen Bencana
+Model Terain Digital
+Oseanografi Fisis
+Pemrograman Komputer
+Pemrograman Spasial
+Penataan Agraria dan Tata Ruang
+Pendidikan Agama
+Pendidikan Kewarganegaraan
+Pendidikan Pancasila
+Penetapan dan Penegasan Batas Wilayah
+Pengantar Ilmu Kebumian
+Pengelolaan Wilayah Pesisir
+Penginderaan Jauh
+Penginderaan Jauh Sensor Aktif
+Penginderaan Jauh Terapan
+Penilaian Tanah dan Properti
+Perancangan Sistem Informasi Pertanahan
+Praktikum Analisis Citra Penginderaan Jauh
+Praktikum Analisis Geospasial
+Praktikum Fotogrametri Dasar
+Praktikum GNSS Terapan
+Praktikum Grafika Komputer dan Visualisasi
+Praktikum Kartografi
+Praktikum Pemrograman Komputer
+Praktikum Penginderaan Jauh
+Praktikum SIG Berbasis Web
+Praktikum SIG Terapan
+Praktikum Sistem Basisdata
+Praktikum Sistem Fotogrametri Digital
+Praktikum Sistem Informasi Geografis
+Praktikum Survei GNSS
+Praktikum Survei Hidrografi I
+Praktikum Survei Kadastral
+Praktikum Survei Pertambangan
+Praktikum Survei Rekayasa
+Praktikum Survei Rute
+Praktikum Survei Terestris I
+Praktikum Survei Terestris II
+Praktikum Survei Terestris III
+Proyek Rekayasa Geodesi-Geomatika
+Proyeksi Peta
+SIG Berbasis Web
+SIG Terapan
+Sistem Basisdata
+Sistem Fotogrametri Digital
+Sistem Informasi Geografis
+Sistem Kadastral
+Sistem Koordinat
+Sistem Referensi Geodesi
+Skripsi
+Statistika Dasar
+Struktur Data Spasial
+Survei Deformasi
+Survei Geodinamika
+Survei GNSS
+Survei Hidrografi I
+Survei Hidrografi II
+Survei Kadastral
+Survei Pertambangan
+Survei Rekayasa
+Survei Rekayasa Laut
+Survei Rute
+Survei Terestris I
+Survei Terestris II
+Survei Terestris III
+Teknologi Geomatika
