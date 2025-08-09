@@ -1257,39 +1257,61 @@ function renderCPLTable(rows, containerId, jenjang, avgCPL = []) {
   const cplKeys = getCPLKeysForJenjang(jenjang);
   const headers = ['Nama Mata Kuliah', 'Kelas', ...cplKeys];
 
-  let html = `
-    <div class="card mb-4">
-      <div class="card-header bg-success text-white fw-semibold">Capaian Profil Lulusan (CPL)</div>
-      <div class="card-body p-2">
-        <div class="table-responsive">
-          <table class="table table-bordered table-striped table-sm text-center align-middle">
-            <thead>
-              <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
-            </thead>
-            <tbody>`;
+  let sortAsc = true;
+  const dataRows = [...rows]; // clone original data
 
-  rows.forEach(row => {
-    html += '<tr>' + headers.map(h => {
-      if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
-        return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
-      } else {
-        const v = getRowValueCaseInsensitive(row, h);
-        return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
-      }
-    }).join('') + '</tr>';
-  });
+  function renderTableContent() {
+    let html = `
+      <div class="card mb-4">
+        <div class="card-header bg-success text-white fw-semibold d-flex justify-content-between align-items-center">
+          Capaian Profil Lulusan (CPL)
+          <button class="btn btn-light btn-sm" id="${containerId}-sortBtn">
+            Sort Nama Mata Kuliah ${sortAsc ? "▲" : "▼"}
+          </button>
+        </div>
+        <div class="card-body p-2">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-sm text-center align-middle">
+              <thead>
+                <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
+              </thead>
+              <tbody>`;
 
-  html += '</tbody>';
+    dataRows.forEach(row => {
+      html += '<tr>' + headers.map(h => {
+        if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
+          return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+        } else {
+          const v = getRowValueCaseInsensitive(row, h);
+          return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
+        }
+      }).join('') + '</tr>';
+    });
 
-  // Add averages row
-  if (avgCPL.length) {
-    html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
-      avgCPL.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
-      '</tr></tfoot>';
+    html += '</tbody>';
+
+    if (avgCPL.length) {
+      html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
+        avgCPL.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
+        '</tr></tfoot>';
+    }
+
+    html += `</table></div></div></div>`;
+    document.getElementById(containerId).innerHTML = html;
+
+    // Event listener for sorting
+    document.getElementById(`${containerId}-sortBtn`).addEventListener("click", () => {
+      sortAsc = !sortAsc;
+      dataRows.sort((a, b) => {
+        const nameA = (getRowValueCaseInsensitive(a, 'Nama Mata Kuliah') || '').toLowerCase();
+        const nameB = (getRowValueCaseInsensitive(b, 'Nama Mata Kuliah') || '').toLowerCase();
+        return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+      });
+      renderTableContent();
+    });
   }
 
-  html += `</table></div></div></div>`;
-  document.getElementById(containerId).innerHTML = html;
+  renderTableContent();
 }
 
 function renderPITable(rows, containerId, jenjang, avgPI = []) {
@@ -1297,39 +1319,61 @@ function renderPITable(rows, containerId, jenjang, avgPI = []) {
   const piKeys = getPIKeysForJenjang(jenjang);
   const headers = ['Nama Mata Kuliah', 'Kelas', ...piKeys];
 
-  let html = `
-    <div class="card mb-4">
-      <div class="card-header bg-primary text-white fw-semibold">Performance Indicator (PI)</div>
-      <div class="card-body p-2">
-        <div class="table-responsive">
-          <table class="table table-bordered table-striped table-sm text-center align-middle">
-            <thead>
-              <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
-            </thead>
-            <tbody>`;
+  let sortAsc = true;
+  const dataRows = [...rows]; // clone original data
 
-  rows.forEach(row => {
-    html += '<tr>' + headers.map(h => {
-      if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
-        return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
-      } else {
-        const v = getRowValueCaseInsensitive(row, h);
-        return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
-      }
-    }).join('') + '</tr>';
-  });
+  function renderTableContent() {
+    let html = `
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white fw-semibold d-flex justify-content-between align-items-center">
+          Performance Indicator (PI)
+          <button class="btn btn-light btn-sm" id="${containerId}-sortBtn">
+            Sort Nama Mata Kuliah ${sortAsc ? "▲" : "▼"}
+          </button>
+        </div>
+        <div class="card-body p-2">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-sm text-center align-middle">
+              <thead>
+                <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
+              </thead>
+              <tbody>`;
 
-  html += '</tbody>';
+    dataRows.forEach(row => {
+      html += '<tr>' + headers.map(h => {
+        if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
+          return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+        } else {
+          const v = getRowValueCaseInsensitive(row, h);
+          return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
+        }
+      }).join('') + '</tr>';
+    });
 
-  // Add averages row
-  if (avgPI.length) {
-    html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
-      avgPI.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
-      '</tr></tfoot>';
+    html += '</tbody>';
+
+    if (avgPI.length) {
+      html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
+        avgPI.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
+        '</tr></tfoot>';
+    }
+
+    html += `</table></div></div></div>`;
+    document.getElementById(containerId).innerHTML = html;
+
+    // Event listener for sorting
+    document.getElementById(`${containerId}-sortBtn`).addEventListener("click", () => {
+      sortAsc = !sortAsc;
+      dataRows.sort((a, b) => {
+        const nameA = (getRowValueCaseInsensitive(a, 'Nama Mata Kuliah') || '').toLowerCase();
+        const nameB = (getRowValueCaseInsensitive(b, 'Nama Mata Kuliah') || '').toLowerCase();
+        return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+      });
+      renderTableContent();
+    });
   }
 
-  html += `</table></div></div></div>`;
-  document.getElementById(containerId).innerHTML = html;
+  renderTableContent();
 }
 
 // Download and process the portofolio template
@@ -1517,12 +1561,60 @@ async function loadStudentPortfolio() {
                 <p><strong>NIM:</strong> ${nimInput}</p>`;
 
     // 2. Display Daftar Mata Kuliah
-    html += `<h3>Daftar Mata Kuliah</h3><ul>`;
-    studentRows.forEach(row => {
-      html += `<li>${row["Nama Mata Kuliah"]} (Kelas ${row.Kelas})</li>`;
-    });
-    html += `</ul>`;
-    document.getElementById("studentCourses").innerHTML = html;
+    let sortAscMK = true;
+
+    function renderMKTable(rows) {
+      let tableHtml = `
+        <div class="card mb-3 shadow-sm">
+          <div class="card-header bg-secondary text-white fw-semibold d-flex justify-content-between align-items-center">
+            <span>Daftar Mata Kuliah</span>
+            <button class="btn btn-light btn-sm" id="sortMKBtn">
+              Sort Nama Mata Kuliah ${sortAscMK ? "▲" : "▼"}
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Nama Mata Kuliah</th>
+                  <th>Kelas</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+
+      rows.forEach(row => {
+        tableHtml += `
+          <tr>
+            <td>${row["Nama Mata Kuliah"]}</td>
+            <td>${row.Kelas}</td>
+          </tr>
+        `;
+      });
+
+      tableHtml += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("studentCourses").innerHTML = tableHtml;
+
+      // Add click event for sorting
+      document.getElementById("sortMKBtn").addEventListener("click", () => {
+        sortAscMK = !sortAscMK;
+        const sortedRows = [...rows].sort((a, b) =>
+          sortAscMK
+            ? a["Nama Mata Kuliah"].localeCompare(b["Nama Mata Kuliah"])
+            : b["Nama Mata Kuliah"].localeCompare(a["Nama Mata Kuliah"])
+        );
+        renderMKTable(sortedRows);
+      });
+    }
+
+    // Initial render
+    renderMKTable(studentRows);
 
     // 3. Use jenjang-specific PI keys
     const piKeys = getPIKeysForJenjang(jenjang);
@@ -1800,43 +1892,78 @@ function renderCPLMHSTable(rows, containerId, cplKeys) {
     return;
   }
 
-  let html = `
-    <div class="card mb-4">
-      <div class="card-header bg-success text-white fw-semibold">Capaian Profil Lulusan (CPL)</div>
-      <div class="card-body p-2">
-        <div class="table-responsive">
-          <table class="table table-bordered table-striped table-sm text-center align-middle">
-            <thead>
-              <tr>
-                <th class="text-nowrap">Nama Mata Kuliah</th>
-                <th class="text-nowrap">Kelas</th>`;
+  let sortAsc = true; // toggle state
+  const renderTable = () => {
+    // Separate rata-rata row from others
+    const mainRows = rows.slice(0, rows.length - 1);
+    const avgRow = rows[rows.length - 1];
 
-  cplKeys.forEach(key => {
-    html += `<th>${key}</th>`;
-  });
+    let html = `
+      <div class="card mb-4">
+        <div class="card-header bg-success text-white fw-semibold d-flex justify-content-between align-items-center">
+          <span>Capaian Profil Lulusan (CPL)</span>
+          <button class="btn btn-light btn-sm" id="${containerId}-sortBtn">
+            Sort Nama Mata Kuliah ${sortAsc ? "▲" : "▼"}
+          </button>
+        </div>
+        <div class="card-body p-2">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-sm text-center align-middle">
+              <thead>
+                <tr>
+                  <th class="text-nowrap">Nama Mata Kuliah</th>
+                  <th class="text-nowrap">Kelas</th>`;
 
-  html += `
-              </tr>
-            </thead>
-            <tbody>`;
-
-  rows.forEach(row => {
-    html += `<tr><td>${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
     cplKeys.forEach(key => {
-      const val = row[key];
+      html += `<th>${key}</th>`;
+    });
+
+    html += `
+                </tr>
+              </thead>
+              <tbody>`;
+
+    // Render main rows
+    mainRows.forEach(row => {
+      html += `<tr><td>${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
+      cplKeys.forEach(key => {
+        const val = row[key];
+        html += `<td>${(val !== undefined && val !== null && val !== '' && !isNaN(val)) ? Number(val).toFixed(2) : ''}</td>`;
+      });
+      html += `</tr>`;
+    });
+
+    // Render average row last
+    html += `<tr class="table-secondary fw-bold"><td>${avgRow["Nama Mata Kuliah"]}</td><td>${avgRow["Kelas"]}</td>`;
+    cplKeys.forEach(key => {
+      const val = avgRow[key];
       html += `<td>${(val !== undefined && val !== null && val !== '' && !isNaN(val)) ? Number(val).toFixed(2) : ''}</td>`;
     });
     html += `</tr>`;
-  });
 
-  html += `
-            </tbody>
-          </table>
+    html += `
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </div>`;
+      </div>`;
 
-  document.getElementById(containerId).innerHTML = html;
+    document.getElementById(containerId).innerHTML = html;
+
+    // Attach click event to sort button
+    document.getElementById(`${containerId}-sortBtn`).addEventListener("click", () => {
+      sortAsc = !sortAsc;
+      mainRows.sort((a, b) => {
+        const nameA = a["Nama Mata Kuliah"].toLowerCase();
+        const nameB = b["Nama Mata Kuliah"].toLowerCase();
+        return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+      });
+      rows = [...mainRows, avgRow]; // keep avgRow last
+      renderTable(); // re-render after sort
+    });
+  };
+
+  renderTable();
 }
 
 function renderPIMHSTable(rows, containerId, piKeys) {
@@ -1845,43 +1972,78 @@ function renderPIMHSTable(rows, containerId, piKeys) {
     return;
   }
 
-  let html = `
-    <div class="card mb-4">
-      <div class="card-header bg-primary text-white fw-semibold">Performance Indicator (PI)</div>
-      <div class="card-body p-2">
-        <div class="table-responsive">
-          <table class="table table-bordered table-striped table-sm text-center align-middle">
-            <thead>
-              <tr>
-                <th class="text-nowrap">Nama Mata Kuliah</th>
-                <th class="text-nowrap">Kelas</th>`;
+  let sortAsc = true; // toggle state
+  const renderTable = () => {
+    // Separate rata-rata row from others
+    const mainRows = rows.slice(0, rows.length - 1);
+    const avgRow = rows[rows.length - 1];
 
-  piKeys.forEach(key => {
-    html += `<th>${key}</th>`;
-  });
+    let html = `
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white fw-semibold d-flex justify-content-between align-items-center">
+          <span>Performance Indicator (PI)</span>
+          <button class="btn btn-light btn-sm" id="${containerId}-sortBtn">
+            Sort Nama Mata Kuliah ${sortAsc ? "▲" : "▼"}
+          </button>
+        </div>
+        <div class="card-body p-2">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-sm text-center align-middle">
+              <thead>
+                <tr>
+                  <th class="text-nowrap">Nama Mata Kuliah</th>
+                  <th class="text-nowrap">Kelas</th>`;
 
-  html += `
-              </tr>
-            </thead>
-            <tbody>`;
-
-  rows.forEach(row => {
-    html += `<tr><td>${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
     piKeys.forEach(key => {
-      const val = row[key];
+      html += `<th>${key}</th>`;
+    });
+
+    html += `
+                </tr>
+              </thead>
+              <tbody>`;
+
+    // Render main rows
+    mainRows.forEach(row => {
+      html += `<tr><td>${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
+      piKeys.forEach(key => {
+        const val = row[key];
+        html += `<td>${(val !== undefined && val !== null && val !== '' && !isNaN(val)) ? Number(val).toFixed(2) : ''}</td>`;
+      });
+      html += `</tr>`;
+    });
+
+    // Render average row last
+    html += `<tr class="table-secondary fw-bold"><td>${avgRow["Nama Mata Kuliah"]}</td><td>${avgRow["Kelas"]}</td>`;
+    piKeys.forEach(key => {
+      const val = avgRow[key];
       html += `<td>${(val !== undefined && val !== null && val !== '' && !isNaN(val)) ? Number(val).toFixed(2) : ''}</td>`;
     });
     html += `</tr>`;
-  });
 
-  html += `
-            </tbody>
-          </table>
+    html += `
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </div>`;
+      </div>`;
 
-  document.getElementById(containerId).innerHTML = html;
+    document.getElementById(containerId).innerHTML = html;
+
+    // Attach click event to sort button
+    document.getElementById(`${containerId}-sortBtn`).addEventListener("click", () => {
+      sortAsc = !sortAsc;
+      mainRows.sort((a, b) => {
+        const nameA = a["Nama Mata Kuliah"].toLowerCase();
+        const nameB = b["Nama Mata Kuliah"].toLowerCase();
+        return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+      });
+      rows = [...mainRows, avgRow]; // keep avgRow last
+      renderTable(); // re-render after sort
+    });
+  };
+
+  renderTable();
 }
 
 // Load and visualize time series CPL Prodi
