@@ -1255,10 +1255,10 @@ function drawPIBarChart(avgData) {
 function renderCPLTable(rows, containerId, jenjang, avgCPL = []) {
   jenjang = normalizeJenjangParam(jenjang);
   const cplKeys = getCPLKeysForJenjang(jenjang);
-  const headers = ['Nama Mata Kuliah', 'Kelas', ...cplKeys];
+  const headers = ['No.', 'Nama Mata Kuliah', 'Kelas', ...cplKeys];
 
   let sortAsc = true;
-  const dataRows = [...rows]; // clone original data
+  const dataRows = [...rows].map((row, index) => ({ ...row, _originalIndex: index + 1 }));
 
   function renderTableContent() {
     let html = `
@@ -1271,35 +1271,41 @@ function renderCPLTable(rows, containerId, jenjang, avgCPL = []) {
         </div>
         <div class="card-body p-2">
           <div class="table-responsive">
-            <table class="table table-bordered table-striped table-sm text-center align-middle">
+            <table class="table table-bordered table-striped table-sm align-middle">
               <thead>
                 <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
               </thead>
               <tbody>`;
 
-    dataRows.forEach(row => {
+    dataRows.forEach((row, idx) => {
       html += '<tr>' + headers.map(h => {
-        if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
-          return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
-        } else {
-          const v = getRowValueCaseInsensitive(row, h);
-          return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
+        if (h === 'No.') {
+          // Number based on current visual order, like a static counter
+          return `<td class="text-center">${idx + 1}</td>`;
         }
+        if (h === 'Nama Mata Kuliah') {
+          return `<td class="text-start">${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+        }
+        if (h === 'Kelas') {
+          return `<td class="text-center">${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+        }
+        const v = getRowValueCaseInsensitive(row, h);
+        return `<td class="text-center">${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
       }).join('') + '</tr>';
     });
 
     html += '</tbody>';
 
     if (avgCPL.length) {
-      html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
-        avgCPL.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
+      html += `<tfoot><tr><td colspan="3" class="fw-bold">Rata-rata</td>` +
+        avgCPL.map(v => `<td class="fw-bold text-center">${v.toFixed(2)}</td>`).join('') +
         '</tr></tfoot>';
     }
 
     html += `</table></div></div></div>`;
     document.getElementById(containerId).innerHTML = html;
 
-    // Event listener for sorting
+    // Sorting by Nama Mata Kuliah
     document.getElementById(`${containerId}-sortBtn`).addEventListener("click", () => {
       sortAsc = !sortAsc;
       dataRows.sort((a, b) => {
@@ -1317,10 +1323,10 @@ function renderCPLTable(rows, containerId, jenjang, avgCPL = []) {
 function renderPITable(rows, containerId, jenjang, avgPI = []) {
   jenjang = normalizeJenjangParam(jenjang);
   const piKeys = getPIKeysForJenjang(jenjang);
-  const headers = ['Nama Mata Kuliah', 'Kelas', ...piKeys];
+  const headers = ['No.', 'Nama Mata Kuliah', 'Kelas', ...piKeys];
 
   let sortAsc = true;
-  const dataRows = [...rows]; // clone original data
+  const dataRows = [...rows].map((row, index) => ({ ...row, _originalIndex: index + 1 }));
 
   function renderTableContent() {
     let html = `
@@ -1333,35 +1339,41 @@ function renderPITable(rows, containerId, jenjang, avgPI = []) {
         </div>
         <div class="card-body p-2">
           <div class="table-responsive">
-            <table class="table table-bordered table-striped table-sm text-center align-middle">
+            <table class="table table-bordered table-striped table-sm align-middle">
               <thead>
                 <tr>${headers.map(h => `<th class="text-nowrap">${h}</th>`).join('')}</tr>
               </thead>
               <tbody>`;
 
-    dataRows.forEach(row => {
+    dataRows.forEach((row, idx) => {
       html += '<tr>' + headers.map(h => {
-        if (h === 'Nama Mata Kuliah' || h === 'Kelas') {
-          return `<td>${getRowValueCaseInsensitive(row, h) || ''}</td>`;
-        } else {
-          const v = getRowValueCaseInsensitive(row, h);
-          return `<td>${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
+        if (h === 'No.') {
+          // Number based on current visual order, like a static counter
+          return `<td class="text-center">${idx + 1}</td>`;
         }
+        if (h === 'Nama Mata Kuliah') {
+          return `<td class="text-start">${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+        }
+        if (h === 'Kelas') {
+          return `<td class="text-center">${getRowValueCaseInsensitive(row, h) || ''}</td>`;
+        }
+        const v = getRowValueCaseInsensitive(row, h);
+        return `<td class="text-center">${(v !== undefined && v !== null && v !== '' && !isNaN(v)) ? Number(v).toFixed(2) : ''}</td>`;
       }).join('') + '</tr>';
     });
 
     html += '</tbody>';
 
     if (avgPI.length) {
-      html += `<tfoot><tr><td colspan="2" class="fw-bold">Rata-rata</td>` +
-        avgPI.map(v => `<td class="fw-bold">${v.toFixed(2)}</td>`).join('') +
+      html += `<tfoot><tr><td colspan="3" class="fw-bold">Rata-rata</td>` +
+        avgPI.map(v => `<td class="fw-bold text-center">${v.toFixed(2)}</td>`).join('') +
         '</tr></tfoot>';
     }
 
     html += `</table></div></div></div>`;
     document.getElementById(containerId).innerHTML = html;
 
-    // Event listener for sorting
+    // Sorting by Nama Mata Kuliah
     document.getElementById(`${containerId}-sortBtn`).addEventListener("click", () => {
       sortAsc = !sortAsc;
       dataRows.sort((a, b) => {
