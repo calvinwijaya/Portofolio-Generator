@@ -1937,10 +1937,10 @@ function renderCPLMHSTable(rows, containerId, cplKeys) {
 
     // Render main rows
     mainRows.forEach(row => {
-      html += `<tr><td>${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
+      html += `<tr><td class="text-start">${row["Nama Mata Kuliah"]}</td><td>${row["Kelas"]}</td>`;
       cplKeys.forEach(key => {
         const val = row[key];
-        html += `<td>${(val !== undefined && val !== null && val !== '' && !isNaN(val)) ? Number(val).toFixed(2) : ''}</td>`;
+        html += `<td>${(val > 0) ? Number(val).toFixed(2) : ''}</td>`;
       });
       html += `</tr>`;
     });
